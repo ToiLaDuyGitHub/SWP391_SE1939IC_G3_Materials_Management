@@ -540,17 +540,16 @@ public class MaterialDAO {
             }
             
             // 2. Chuẩn bị batch cho cập nhật số lượng
-            String updateQuantitySQL = "UPDATE materialquantities SET " +
-                    "UsableQuantity = UsableQuantity + ?, " +
-                    "BrokenQuantity = BrokenQuantity + ?, " +
-                    "TotalQuantity = TotalQuantity + ? " +
-                    "WHERE MaterialID = ?";
+            String updateQuantitySQL = "UPDATE materialquantities SET "
+                    + "UsableQuantity = UsableQuantity + ?, "
+                    + "BrokenQuantity = BrokenQuantity + ? "
+                    + "WHERE MaterialID = ?";
             stmtUpdate = conn.prepareStatement(updateQuantitySQL);
             
             // 3. Chuẩn bị batch cho chèn lịch sử chi tiết
-            String insertHistoryMaterialsSQL = "INSERT INTO importhistorymaterials " +
-                    "(ImportHistoryID, MaterialID, UsableQuantity, BrokenQuantity) " +
-                    "VALUES (?, ?, ?, ?)";
+            String insertHistoryMaterialsSQL = "INSERT INTO importhistorymaterials "
+                    + "(ImportHistoryID, MaterialID, UsableQuantity, BrokenQuantity) "
+                    + "VALUES (?, ?, ?, ?)";
             stmtInsert = conn.prepareStatement(insertHistoryMaterialsSQL);
             
             // Thêm các bản ghi vào batch
@@ -558,13 +557,11 @@ public class MaterialDAO {
                 int materialID = material.get("materialId");
                 int usableQuantity = material.get("usableQuantity");
                 int brokenQuantity = material.get("brokenQuantity");
-                int totalQuantity = usableQuantity + brokenQuantity; // Tính tổng số lượng
                 
                 // Batch cho cập nhật số lượng
                 stmtUpdate.setInt(1, usableQuantity);
                 stmtUpdate.setInt(2, brokenQuantity);
-                stmtUpdate.setInt(3, totalQuantity);
-                stmtUpdate.setInt(4, materialID);
+                stmtUpdate.setInt(3, materialID);
                 stmtUpdate.addBatch();
                 
                 // Batch cho chèn lịch sử
