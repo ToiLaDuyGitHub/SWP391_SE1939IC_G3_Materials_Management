@@ -18,6 +18,8 @@ import model.SubCategory;
 import model.Supplier;
 import model.Units;
 import model.dto.MaterialDTO;
+import java.sql.Statement;
+import java.util.Map;
 
 /**
  *
@@ -245,34 +247,49 @@ public class MaterialDAO {
 
     public List<Material> suggestMaterialsByName(String materialName) {
         List<Material> materials = new ArrayList<>();
-        String sql = "SELECT f.*, c.CategoryName, sc.SubcategoryName, sup.SupplierName, sup.Address, sup.PhoneNum, fc.NewQuantity, fc.UsableQuantity, fc.BrokenQuantity "
-                + "FROM materials f "
-                + "LEFT JOIN categories c ON f.CategoryID = c.CategoryID "
-                + "LEFT JOIN subcategories sc ON f.SubcategoryID = sc.SubcategoryID "
-                + "LEFT JOIN suppliers sup ON f.SupplierID = sup.SupplierID "
-                + "LEFT JOIN materialconditions fc ON f.MaterialID = fc.MaterialID "
-                + "WHERE TRIM(LOWER(f.MaterialName)) LIKE ?";
+        String sql = "SELECT m.*, c.CategoryName, sc.SubcategoryName, s.SupplierName, s.Address, s.PhoneNum, " +
+                    "mq.UsableQuantity, mq.BrokenQuantity, mq.TotalQuantity " +
+                    "FROM materials m " +
+                    "LEFT JOIN categories c ON m.CategoryID = c.CategoryID " +
+                    "LEFT JOIN subcategories sc ON m.SubcategoryID = sc.SubcategoryID " +
+                    "LEFT JOIN suppliers s ON m.SupplierID = s.SupplierID " +
+                    "LEFT JOIN materialquantities mq ON m.MaterialID = mq.MaterialID " +
+                    "WHERE LOWER(m.MaterialName) LIKE LOWER(?)";
 
-        try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, materialName.trim().toLowerCase() + "%"); // Tìm các tên bắt đầu bằng từ khóa
+        try (Connection conn = DBUtil.getConnection(); 
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, "%" + materialName.trim().toLowerCase() + "%");
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
                 Material material = new Material();
                 material.setMaterialID(rs.getInt("MaterialID"));
                 material.setMaterialName(rs.getString("MaterialName"));
-                material.setCategory(new Category(rs.getInt("CategoryID"), rs.getString("CategoryName")));
-                material.setSubcategory(new SubCategory(rs.getInt("SubcategoryID"), rs.getInt("CategoryID"), rs.getString("SubcategoryName")));
-                material.setSupplierID(new Supplier(rs.getInt("SupplierID"), rs.getString("SupplierName"), rs.getString("Address"), rs.getString("PhoneNum")));
                 
-                material.setImage(rs.getString("Image"));
-
-                MaterialQuantity quantity = new MaterialQuantity(
-                        rs.getInt("MaterialID"),
-                        rs.getInt("UsableQuantity"),
-                        rs.getInt("BrokenQuantity"),
-                        rs.getInt("TotalQuantity"));
+                Category category = new Category();
+                category.setCategoryID(rs.getInt("CategoryID"));
+                category.setCategoryName(rs.getString("CategoryName"));
+                material.setCategory(category);
+                
+                SubCategory subCategory = new SubCategory();
+                subCategory.setSubcategoryID(rs.getInt("SubcategoryID"));
+                subCategory.setSubcategoryName(rs.getString("SubcategoryName"));
+                material.setSubcategory(subCategory);
+                
+                Supplier supplier = new Supplier();
+                supplier.setSupplierID(rs.getInt("SupplierID"));
+                supplier.setSupplierName(rs.getString("SupplierName"));
+                supplier.setAddress(rs.getString("Address"));
+                supplier.setPhoneNum(rs.getString("PhoneNum"));
+                material.setSupplierID(supplier);
+                
+                MaterialQuantity quantity = new MaterialQuantity();
+                quantity.setMaterialID(rs.getInt("MaterialID"));
+                quantity.setUsableQuantity(rs.getInt("UsableQuantity"));
+                quantity.setBrokenQuantity(rs.getInt("BrokenQuantity"));
+                quantity.setTotalQuantity(rs.getInt("TotalQuantity"));
                 material.setQuantity(quantity);
+                
                 materials.add(material);
             }
         } catch (SQLException e) {
@@ -378,7 +395,48 @@ public class MaterialDAO {
         }
     }
 
+    public List<Material> getMaterialsByCategory(int categoryID) {
+    List<Material> list = new ArrayList<>();
+    String sql = "SELECT m.MaterialID, m.MaterialName, m.Image, m.Detail, "
+            + "                     c.CategoryID, c.CategoryName, "
+            + "                     sc.SubcategoryID, sc.SubcategoryName, "
+            + "                     s.SupplierID, s.SupplierName, "
+            + "                     mq.UsableQuantity, mq.BrokenQuantity, mq.TotalQuantity"
+            + "                     FROM materials m"
+            + "                     LEFT JOIN categories c ON m.CategoryID = c.CategoryID "
+            + "                     LEFT JOIN subcategories sc ON m.SubcategoryID = sc.SubcategoryID "
+            + "                     LEFT JOIN suppliers s ON m.SupplierID = s.SupplierID "
+            + "                     LEFT JOIN materialquantities mq ON m.MaterialID = mq.MaterialID"
+            + "                     WHERE m.CategoryID = ?"; 
 
+    try (Connection conn = DBUtil.getConnection(); 
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+        stmt.setInt(1, categoryID);
+        ResultSet rs = stmt.executeQuery();
+        while (rs.next()) {
+            Material material = new Material();
+
+            material.setMaterialID(rs.getInt("MaterialID"));
+            material.setMaterialName(rs.getString("MaterialName"));
+            material.setCategory(new Category(rs.getInt("CategoryID"), rs.getString("CategoryName")));
+            material.setSubcategory(new SubCategory(rs.getInt("SubcategoryID"), rs.getInt("CategoryID"), rs.getString("SubcategoryName")));
+            material.setSupplierID(new Supplier(rs.getInt("SupplierID"), rs.getString("SupplierName"), null, null));
+            material.setImage(rs.getString("Image"));
+            material.setDetail(rs.getString("Detail"));
+
+            MaterialQuantity quantity = new MaterialQuantity(
+                    rs.getInt("MaterialID"),
+                    rs.getInt("UsableQuantity"),
+                    rs.getInt("BrokenQuantity"),
+                    rs.getInt("TotalQuantity"));
+            material.setQuantity(quantity);
+            list.add(material);
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return list;
+}
     // Xóa vật tư
     public void deleteMaterial(int materialID) throws SQLException {
         Connection conn = null;
@@ -487,10 +545,224 @@ public class MaterialDAO {
                 material.setMinUnit(rs.getString("MinUnit"));
                 material.setMaxUnit(rs.getString("MaxUnit"));
                 materials.add(material);
-            }
+                }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return materials;
     }
+    
+    public void importMaterials(List<Map<String, Integer>> materials, int userID) throws SQLException {
+        Connection conn = null;
+        PreparedStatement stmtHistory = null;
+        PreparedStatement stmtUpdate = null;
+        PreparedStatement stmtInsert = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = DBUtil.getConnection();
+            conn.setAutoCommit(false); // Bắt đầu transaction
+            
+            // 1. Tạo bản ghi trong importhistory
+            String insertHistorySQL = "INSERT INTO importhistory (ImportedByID) VALUES (?)";
+            stmtHistory = conn.prepareStatement(insertHistorySQL, Statement.RETURN_GENERATED_KEYS);
+            stmtHistory.setInt(1, userID);
+            stmtHistory.executeUpdate();
+            
+            // Lấy ID của bản ghi vừa tạo
+            rs = stmtHistory.getGeneratedKeys();
+            int importHistoryID = 0;
+            if (rs.next()) {
+                importHistoryID = rs.getInt(1);
+            }
+            
+            // 2. Chuẩn bị batch cho cập nhật số lượng
+            String updateQuantitySQL = "UPDATE materialquantities SET "
+                    + "UsableQuantity = UsableQuantity + ?, "
+                    + "BrokenQuantity = BrokenQuantity + ? "
+                    + "WHERE MaterialID = ?";
+            stmtUpdate = conn.prepareStatement(updateQuantitySQL);
+            
+            // 3. Chuẩn bị batch cho chèn lịch sử chi tiết
+            String insertHistoryMaterialsSQL = "INSERT INTO importhistorymaterials "
+                    + "(ImportHistoryID, MaterialID, UsableQuantity, BrokenQuantity) "
+                    + "VALUES (?, ?, ?, ?)";
+            stmtInsert = conn.prepareStatement(insertHistoryMaterialsSQL);
+            
+            // Thêm các bản ghi vào batch
+            for (Map<String, Integer> material : materials) {
+                int materialID = material.get("materialId");
+                int usableQuantity = material.get("usableQuantity");
+                int brokenQuantity = material.get("brokenQuantity");
+                
+                // Batch cho cập nhật số lượng
+                stmtUpdate.setInt(1, usableQuantity);
+                stmtUpdate.setInt(2, brokenQuantity);
+                stmtUpdate.setInt(3, materialID);
+                stmtUpdate.addBatch();
+                
+                // Batch cho chèn lịch sử
+                stmtInsert.setInt(1, importHistoryID);
+                stmtInsert.setInt(2, materialID);
+                stmtInsert.setInt(3, usableQuantity);
+                stmtInsert.setInt(4, brokenQuantity);
+                stmtInsert.addBatch();
+            }
+            
+            // Thực thi batch
+            stmtUpdate.executeBatch();
+            stmtInsert.executeBatch();
+            
+            conn.commit(); // Commit transaction
+            
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback(); // Rollback nếu có lỗi
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            throw e;
+        } finally {
+            if (rs != null) rs.close();
+            if (stmtHistory != null) stmtHistory.close();
+            if (stmtUpdate != null) stmtUpdate.close();
+            if (stmtInsert != null) stmtInsert.close();
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
+        }
+    }
+
+    public void importMaterialsForPurchase(List<Map<String, Integer>> materials, int userID, int purchaseRequestID) throws SQLException {
+        Connection conn = null;
+        PreparedStatement stmtHistory = null;
+        PreparedStatement stmtUpdate = null;
+        PreparedStatement stmtInsert = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = DBUtil.getConnection();
+            conn.setAutoCommit(false); // Bắt đầu transaction
+            
+            // 1. Tạo bản ghi trong importhistory
+            String insertHistorySQL = "INSERT INTO importhistory (ImportedByID, PurchaseRequestID) VALUES (?, ?)";
+            stmtHistory = conn.prepareStatement(insertHistorySQL, Statement.RETURN_GENERATED_KEYS);
+            stmtHistory.setInt(1, userID);
+            stmtHistory.setInt(2, purchaseRequestID);
+            stmtHistory.executeUpdate();
+            
+            // Lấy ID của bản ghi vừa tạo
+            rs = stmtHistory.getGeneratedKeys();
+            int importHistoryID = 0;
+            if (rs.next()) {
+                importHistoryID = rs.getInt(1);
+            }
+            
+            // 2. Chuẩn bị batch cho cập nhật số lượng
+            String updateQuantitySQL = "UPDATE materialquantities SET "
+                    + "UsableQuantity = UsableQuantity + ?, "
+                    + "BrokenQuantity = BrokenQuantity + ? "
+                    + "WHERE MaterialID = ?";
+            stmtUpdate = conn.prepareStatement(updateQuantitySQL);
+            
+            // 3. Chuẩn bị batch cho chèn lịch sử chi tiết
+            String insertHistoryMaterialsSQL = "INSERT INTO importhistorymaterials "
+                    + "(ImportHistoryID, MaterialID, UsableQuantity, BrokenQuantity) "
+                    + "VALUES (?, ?, ?, ?)";
+            stmtInsert = conn.prepareStatement(insertHistoryMaterialsSQL);
+            
+            // Thêm các bản ghi vào batch
+            for (Map<String, Integer> material : materials) {
+                int materialID = material.get("materialId");
+                int usableQuantity = material.get("usableQuantity");
+                int brokenQuantity = material.get("brokenQuantity");
+                
+                // Batch cho cập nhật số lượng
+                stmtUpdate.setInt(1, usableQuantity);
+                stmtUpdate.setInt(2, brokenQuantity);
+                stmtUpdate.setInt(3, materialID);
+                stmtUpdate.addBatch();
+                
+                // Batch cho chèn lịch sử
+                stmtInsert.setInt(1, importHistoryID);
+                stmtInsert.setInt(2, materialID);
+                stmtInsert.setInt(3, usableQuantity);
+                stmtInsert.setInt(4, brokenQuantity);
+                stmtInsert.addBatch();
+            }
+            
+            // Thực thi batch
+            stmtUpdate.executeBatch();
+            stmtInsert.executeBatch();
+            
+            conn.commit(); // Commit transaction
+            
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback(); // Rollback nếu có lỗi
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            throw e;
+        } finally {
+            if (rs != null) rs.close();
+            if (stmtHistory != null) stmtHistory.close();
+            if (stmtUpdate != null) stmtUpdate.close();
+            if (stmtInsert != null) stmtInsert.close();
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
+        }
+    }
+    
+    public Material getMaterialById(int materialID) {
+        String sql = "SELECT m.MaterialID, m.MaterialName, m.Image, m.Detail, "
+                + "c.CategoryID, c.CategoryName, "
+                + "sc.SubcategoryID, sc.SubcategoryName, "
+                + "s.SupplierID, s.SupplierName, "
+                + "mq.UsableQuantity, mq.BrokenQuantity, mq.TotalQuantity "
+                + "FROM materials m "
+                + "LEFT JOIN categories c ON m.CategoryID = c.CategoryID "
+                + "LEFT JOIN subcategories sc ON m.SubcategoryID = sc.SubcategoryID "
+                + "LEFT JOIN suppliers s ON m.SupplierID = s.SupplierID "
+                + "LEFT JOIN materialquantities mq ON m.MaterialID = mq.MaterialID "
+                + "WHERE m.MaterialID = ?";
+
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, materialID);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                Material material = new Material();
+                material.setMaterialID(rs.getInt("MaterialID"));
+                material.setMaterialName(rs.getString("MaterialName"));
+                material.setCategory(new Category(rs.getInt("CategoryID"), rs.getString("CategoryName")));
+                material.setSubcategory(new SubCategory(rs.getInt("SubcategoryID"), rs.getInt("CategoryID"), rs.getString("SubcategoryName")));
+                material.setSupplierID(new Supplier(rs.getInt("SupplierID"), rs.getString("SupplierName"), null, null));
+                material.setImage(rs.getString("Image"));
+                material.setDetail(rs.getString("Detail"));
+
+                MaterialQuantity quantity = new MaterialQuantity(
+                        rs.getInt("MaterialID"),
+                        rs.getInt("UsableQuantity"),
+                        rs.getInt("BrokenQuantity"),
+                        rs.getInt("TotalQuantity"));
+                material.setQuantity(quantity);
+                System.out.println("getMaterialById");
+                return material;
+
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
+
+

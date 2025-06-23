@@ -281,6 +281,10 @@
                                     <div class="category-header" onclick="toggleCategory(this)">
                                         <h3 class="category-title">${category.categoryName}</h3>
                                         <div class="category-actions">
+                                            <button class="action-btn" onclick="viewCategory(${category.categoryID})" 
+                                                    title="Xem danh mục">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
                                             <button class="action-btn" onclick="event.stopPropagation(); editCategory(${category.categoryID}, &quot;${category.categoryName}&quot;)" 
                                                     title="Sửa danh mục">
                                                 <i class="fas fa-edit"></i>
@@ -336,6 +340,7 @@
         </div>
 
         <script>
+             
             // Hàm toggle mở rộng/đóng danh mục
             function toggleCategory(element) {
                 const header = element.closest('.category-header');
@@ -530,3 +535,12 @@
         </script>
     </body>
 </html>
+
+<script>
+    function viewCategory(categoryID) {
+        // Chuyển hướng đến trang materialList với tham số categoryID
+        window.location.href = "${pageContext.request.contextPath}/manage-material?categoryID=" + categoryID;
+    }
+    
+    // ... existing code ...
+</script>

@@ -13,7 +13,7 @@ import java.sql.SQLException;
 
 public class DBUtil {
 
-    private static final String JDBC_URL = "jdbc:mysql://localhost:3306/MaterialsManagementDB?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+    private static final String JDBC_URL = "jdbc:mysql://localhost:3306/materialsmanagementdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
     private static final String JDBC_USERNAME = "root";
     private static final String JDBC_PASSWORD = "123456";
 
