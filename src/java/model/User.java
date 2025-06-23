@@ -190,4 +190,7 @@ public class User {
     public void setIsResetRequested(boolean isResetRequested) {
         this.isResetRequested = isResetRequested;
     }
+    public String getFullName() {
+        return (firstName != null ? firstName : "") + " " + (lastName != null ? lastName : "");
+    }
 }

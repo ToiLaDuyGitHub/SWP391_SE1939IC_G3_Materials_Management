@@ -30,43 +30,53 @@ import model.User;
 import model.dto.User_Role;
 import util.DBUtil;
 
+// Định nghĩa servlet để quản lý nhập kho vật tư với URL "/import-materials"
 @WebServlet(name = "ManageImportController", urlPatterns = { "/import-materials" })
 public class ManageImportController extends HttpServlet {
 
+    // Xử lý các yêu cầu GET (hiển thị trang, tìm kiếm, xác thực, xem chi tiết)
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Đặt mã hóa UTF-8 để hỗ trợ tiếng Việt
         request.setCharacterEncoding("UTF-8");
+        // Lấy tham số "action" từ URL để xác định hành động
         String action = request.getParameter("action");
-        try{
+        
+        try {
             if (action == null) {
-            // Hiển thị trang nhập kho vật tư
-            showImportPage(request, response);
-        } else if (action.equals("search")) {
-            // Xử lý tìm kiếm vật tư
-            searchMaterials(request, response);
-        } else if (action.equals("validate")) {
-            // Xác thực tên vật tư và danh mục
-            validateMaterial(request, response);
-        } else if (action.equals("showImportFromDirector")) {
-            showImportFromDictorPage(request, response);
-        } else if (action.equals("viewDetail")) {
-            showImportRequestDetail(request, response);
-        }
-        }catch(Exception e){
+                // Nếu không có action, hiển thị trang nhập kho vật tư
+                showImportPage(request, response);
+            } else if (action.equals("search")) {
+                // Xử lý tìm kiếm vật tư
+                searchMaterials(request, response);
+            } else if (action.equals("validate")) {
+                // Xác thực tên vật tư và danh mục
+                validateMaterial(request, response);
+            } else if (action.equals("showImportFromDirector")) {
+                // Hiển thị trang nhập kho từ các đơn đã duyệt
+                showImportFromDictorPage(request, response);
+            } else if (action.equals("viewDetail")) {
+                // Xem chi tiết đơn yêu cầu nhập kho
+                showImportRequestDetail(request, response);
+            }
+        } catch (Exception e) {
+            // In lỗi nếu có vấn đề trong quá trình xử lý
             e.printStackTrace();
         }
-        
     }
 
+    // Xử lý các yêu cầu POST (nhập kho vật tư, nhập từ đơn đã duyệt)
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Đặt mã hóa UTF-8 để hỗ trợ tiếng Việt
         request.setCharacterEncoding("UTF-8");
+        // Lấy tham số "action" từ yêu cầu
         String action = request.getParameter("action");
 
         if (action != null && action.equals("import")) {
-            // Xử lý nhập kho vật tư
+            // Xử lý nhập kho vật tư từ form nhập tay
             importMaterials(request, response);
         } else if (action != null && action.equals("importFromDirector")) {
             // Xử lý nhập kho từ đơn đã duyệt
@@ -77,55 +87,62 @@ public class ManageImportController extends HttpServlet {
         }
     }
 
+    // Hiển thị trang nhập kho từ các đơn đã duyệt
     private void showImportFromDictorPage(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException {
+        // Khởi tạo DAO để lấy danh sách yêu cầu mua hàng đã duyệt
         PurchaseRequestDAO prDAO = new PurchaseRequestDAO();
         List<PurchaseRequest> approvedRequests = prDAO.getApprovedRequestsWithImportStatus();
 
-        // Tạo Map trạng thái nhập kho
+        // Tạo Map để lưu trạng thái nhập kho của từng đơn
         Map<Integer, Boolean> importStatusMap = new HashMap<>();
         for (PurchaseRequest pr : approvedRequests) {
-            // Giả sử DAO trả về true/false cho từng đơn, bạn có thể lấy từ một hàm khác
-            // hoặc join trong SQL
-            // Ở đây ví dụ: nếu đơn đã có trong importhistory thì là true
+            // Kiểm tra xem đơn đã được nhập kho chưa và lưu vào Map
             importStatusMap.put(pr.getPurchaseRequestID(), prDAO.isImported(pr.getPurchaseRequestID()));
         }
 
+        // Khởi tạo UserDAO để sử dụng trong JSP (lấy thông tin người dùng)
         UserDAO userDao = new UserDAO();
+        // Lưu dữ liệu vào request để gửi đến JSP
         request.setAttribute("userDao", userDao);
         request.setAttribute("approvedRequests", approvedRequests);
         request.setAttribute("importStatusMap", importStatusMap);
+        // Chuyển đến trang JSP hiển thị danh sách đơn đã duyệt
         request.getRequestDispatcher("/import-materials/import-materials-from-director.jsp").forward(request, response);
     }
-    
 
+    // Hiển thị trang nhập kho vật tư
     private void showImportPage(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // Lấy danh sách danh mục để hiển thị trong dropdown
         CategoryDAO categoryDAO = new CategoryDAO();
         List<Category> categories = categoryDAO.getAllCategories();
+        // Lưu danh sách danh mục vào request
         request.setAttribute("categories", categories);
 
-        // Forward đến trang JSP
+        // Chuyển đến trang JSP nhập kho vật tư
         request.getRequestDispatcher("/import-materials/import-materials.jsp").forward(request, response);
     }
 
+    // Xử lý tìm kiếm vật tư theo từ khóa
     private void searchMaterials(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
+            // Lấy từ khóa tìm kiếm từ request
             String keyword = request.getParameter("keyword");
             List<Material> materials = new ArrayList<>();
 
+            // Nếu có từ khóa, tìm kiếm vật tư theo tên
             if (keyword != null && !keyword.trim().isEmpty()) {
                 MaterialDAO materialDAO = new MaterialDAO();
                 materials = materialDAO.suggestMaterialsByName(keyword);
             }
 
-            // Set content type to JSON for AJAX response
+            // Thiết lập response trả về dưới dạng JSON
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
 
-            // Create JSON response
+            // Tạo chuỗi JSON từ danh sách vật tư
             StringBuilder json = new StringBuilder();
             json.append("[");
             for (int i = 0; i < materials.size(); i++) {
@@ -142,25 +159,30 @@ public class ManageImportController extends HttpServlet {
             }
             json.append("]");
 
+            // Gửi JSON về client
             response.getWriter().write(json.toString());
         } catch (Exception e) {
+            // Gửi lỗi nếu có vấn đề trong quá trình xử lý
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write("{\"error\":\"" + e.getMessage() + "\"}");
         }
     }
 
+    // Xác thực tên vật tư và danh mục
     private void validateMaterial(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
+            // Lấy thông tin tên vật tư và ID danh mục từ request
             String materialName = request.getParameter("materialName");
             int categoryID = Integer.parseInt(request.getParameter("categoryID"));
 
+            // Tìm kiếm vật tư theo tên
             MaterialDAO materialDAO = new MaterialDAO();
             List<Material> materials = materialDAO.suggestMaterialsByName(materialName);
 
+            // Kiểm tra xem vật tư có tồn tại và thuộc danh mục đã chọn không
             boolean isValid = false;
             Material validMaterial = null;
-
             for (Material material : materials) {
                 if (material.getMaterialName().equalsIgnoreCase(materialName)
                         && material.getCategory().getCategoryID() == categoryID) {
@@ -170,10 +192,11 @@ public class ManageImportController extends HttpServlet {
                 }
             }
 
-            // Set content type to JSON for AJAX response
+            // Thiết lập response trả về dưới dạng JSON
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
 
+            // Tạo chuỗi JSON với kết quả xác thực
             StringBuilder json = new StringBuilder();
             json.append("{")
                     .append("\"isValid\":").append(isValid);
@@ -187,22 +210,26 @@ public class ManageImportController extends HttpServlet {
             }
             json.append("}");
 
+            // Gửi JSON về client
             response.getWriter().write(json.toString());
         } catch (Exception e) {
+            // Gửi lỗi nếu có vấn đề trong quá trình xử lý
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write("{\"error\":\"" + e.getMessage() + "\"}");
         }
     }
 
+    // Xử lý nhập kho vật tư từ form nhập tay
     private void importMaterials(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         try {
             // Lấy số lượng vật tư từ form
             int materialCount = Integer.parseInt(request.getParameter("materialCount"));
+            // Lấy thông tin người dùng từ session
             User_Role userRole = (User_Role) session.getAttribute("userRole");
-
             int userID = userRole.getUserID();
+
             // Tạo danh sách để lưu thông tin vật tư
             List<Map<String, Integer>> materials = new ArrayList<>();
 
@@ -214,51 +241,52 @@ public class ManageImportController extends HttpServlet {
 
                 if (materialIdStr != null && newQuantityStr != null && brokenQuantityStr != null) {
                     Map<String, Integer> material = new HashMap<>();
-                    material.put("materialId", Integer.parseInt(materialIdStr));
-                    material.put("usableQuantity", Integer.parseInt(newQuantityStr));
-                    material.put("brokenQuantity", Integer.parseInt(brokenQuantityStr));
+                    material.put("materialId", Integer.parseInt(materialIdStr)); // ID vật tư
+                    material.put("usableQuantity", Integer.parseInt(newQuantityStr)); // Số lượng sử dụng được
+                    material.put("brokenQuantity", Integer.parseInt(brokenQuantityStr)); // Số lượng hỏng
                     materials.add(material);
                 }
             }
 
-            // Kiểm tra nếu không có vật tư nào
+            // Kiểm tra nếu không có vật tư nào được chọn
             if (materials.isEmpty()) {
                 throw new Exception("Không có vật tư nào được chọn!");
             }
 
-            // Gọi phương thức từ DAO để xử lý import
+            // Gọi DAO để xử lý nhập kho
             MaterialDAO materialDAO = new MaterialDAO();
             materialDAO.importMaterials(materials, userID);
 
-            // Thêm thông báo thành công vào session
+            // Lưu thông báo thành công vào session
             session.setAttribute("successMessage", "Nhập kho vật tư thành công!");
 
-            // Chuyển hướng về trang nhập kho vật tư
+            // Chuyển hướng về trang nhập kho
             response.sendRedirect(request.getContextPath() + "/import-materials");
             return;
 
         } catch (Exception e) {
+            // In lỗi và lưu thông báo lỗi vào session
             e.printStackTrace();
-            // Thêm thông báo lỗi vào session
             session.setAttribute("error", "Lỗi khi nhập kho: " + e.getMessage());
-            // Chuyển hướng về trang nhập kho vật tư
+            // Chuyển hướng về trang nhập kho
             response.sendRedirect(request.getContextPath() + "/import-materials");
             return;
         }
     }
 
+    // Xử lý nhập kho từ đơn đã duyệt
     private void importMaterialsFromDirector(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         try {
-            // Lấy requestId từ form
+            // Lấy ID yêu cầu từ form
             String requestIdStr = request.getParameter("requestId");
             if (requestIdStr == null) {
                 throw new Exception("Không tìm thấy thông tin đơn yêu cầu!");
             }
             int requestId = Integer.parseInt(requestIdStr);
 
-            // Lấy thông tin đơn yêu cầu và vật tư
+            // Khởi tạo DAO để lấy thông tin đơn yêu cầu và vật tư
             PurchaseRequestDAO prDAO = new PurchaseRequestDAO();
             PurchaseRequestMaterialsDAO prMaterialsDAO = new PurchaseRequestMaterialsDAO();
             
@@ -277,21 +305,21 @@ public class ManageImportController extends HttpServlet {
             List<Map<String, Integer>> materials = new ArrayList<>();
             for (PurchaseRequestMaterials prm : prmList) {
                 Map<String, Integer> material = new HashMap<>();
-                material.put("materialId", prm.getMaterialID());
-                material.put("usableQuantity", prm.getQuantity()); // Số lượng vật tư từ đơn yêu cầu
+                material.put("materialId", prm.getMaterialID()); // ID vật tư
+                material.put("usableQuantity", prm.getQuantity()); // Số lượng sử dụng được
                 material.put("brokenQuantity", 0); // Mặc định số lượng hỏng là 0
                 materials.add(material);
             }
 
-            // Lấy thông tin người nhập kho
+            // Lấy thông tin người nhập kho từ session
             User_Role userRole = (User_Role) session.getAttribute("userRole");
             int userID = userRole.getUserID();
 
-            // Gọi phương thức từ DAO để xử lý import
+            // Gọi DAO để xử lý nhập kho
             MaterialDAO materialDAO = new MaterialDAO();
             materialDAO.importMaterialsForPurchase(materials, userID, requestId);
 
-            // Thêm thông báo thành công vào session
+            // Lưu thông báo thành công vào session
             session.setAttribute("successMessage", "Nhập kho vật tư từ đơn #" + requestId + " thành công!");
 
             // Chuyển hướng về trang danh sách đơn đã duyệt
@@ -299,8 +327,8 @@ public class ManageImportController extends HttpServlet {
             return;
 
         } catch (Exception e) {
+            // In lỗi và lưu thông báo lỗi vào session
             e.printStackTrace();
-            // Thêm thông báo lỗi vào session
             session.setAttribute("error", "Lỗi khi nhập kho: " + e.getMessage());
             // Chuyển hướng về trang danh sách đơn đã duyệt
             response.sendRedirect(request.getContextPath() + "/import-materials?action=showImportFromDirector");
@@ -308,10 +336,13 @@ public class ManageImportController extends HttpServlet {
         }
     }
 
+    // Hiển thị chi tiết đơn yêu cầu nhập kho
     private void showImportRequestDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Lấy ID yêu cầu từ request
         String purchaseRequestIdStr = request.getParameter("purchaseRequestID");
         if (purchaseRequestIdStr == null) {
+            // Nếu không có ID, chuyển về trang danh sách đơn đã duyệt
             response.sendRedirect(request.getContextPath() + "/import-materials?action=showImportFromDirector");
             return;
         }
@@ -325,7 +356,7 @@ public class ManageImportController extends HttpServlet {
         PurchaseRequestMaterialsDAO prMaterialsDAO = new PurchaseRequestMaterialsDAO();
         List<PurchaseRequestMaterials> prmList = prMaterialsDAO.getByPurchaseRequestId(purchaseRequestID);
 
-        // Chuẩn bị danh sách map để truyền sang JSP
+        // Tạo danh sách Map để lưu thông tin vật tư chi tiết
         List<Map<String, Object>> requestMaterials = new ArrayList<>();
         MaterialDAO materialDAO = new MaterialDAO();
         UnitDAO unitDAO = new UnitDAO();
@@ -333,8 +364,8 @@ public class ManageImportController extends HttpServlet {
 
         for (PurchaseRequestMaterials prm : prmList) {
             Map<String, Object> materialDetailMap = new HashMap<>();
-            materialDetailMap.put("materialID", prm.getMaterialID());
-            materialDetailMap.put("quantity", prm.getQuantity());
+            materialDetailMap.put("materialID", prm.getMaterialID()); // ID vật tư
+            materialDetailMap.put("quantity", prm.getQuantity()); // Số lượng vật tư
 
             // Lấy tên vật tư
             Material material = materialDAO.getMaterialById(prm.getMaterialID());
@@ -348,14 +379,17 @@ public class ManageImportController extends HttpServlet {
             String unit = unitDAO.getMinUnitByMaterialId(prm.getMaterialID());
             materialDetailMap.put("unit", unit != null ? unit : "N/A");
 
+            // Thêm vào danh sách
             requestMaterials.add(materialDetailMap);
         }
         
+        // Lưu dữ liệu vào request để gửi đến JSP
         request.setAttribute("requestId", purchaseRequestID);
         request.setAttribute("purchaseRequest", purchaseRequest);
         request.setAttribute("requestMaterials", requestMaterials);
         request.setAttribute("userDao", userDao); // Để lấy tên người dùng trong JSP
         
+        // Chuyển đến trang JSP hiển thị chi tiết đơn yêu cầu
         request.getRequestDispatcher("/import-materials/import-materials-from-director-detail.jsp").forward(request, response);
     }
 }

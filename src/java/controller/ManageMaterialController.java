@@ -4,8 +4,8 @@
  */
 package controller;
 
+import dao.CategoryDAO;
 import dao.MaterialDAO;
-import dao.SubCategoryDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -13,9 +13,11 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.Category;
+import java.util.ArrayList;
 import java.util.List;
+
 import model.Material;
-import model.SubCategory;
 
 /**
  *
@@ -36,28 +38,43 @@ public class ManageMaterialController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-// Tạo đối tượng MaterialDAO
+        // Tạo đối tượng MaterialDAO
         MaterialDAO materialDAO = new MaterialDAO();
-        SubCategoryDAO subCategoryDAO = new SubCategoryDAO();
+        CategoryDAO categoryDAO = new CategoryDAO();
         List<Material> list = null;
-        List<SubCategory> list1sub = null;
-
+        List<Category> categoryList = new ArrayList<>();
+        
         try {
-            // Gọi phương thức getAllMaterials() để lấy toàn bộ danh sách vật tư
-            list = materialDAO.getAllMaterials();
-            list1sub = subCategoryDAO.getAllSubcategories();
+            // Kiểm tra xem có tham số categoryID không
+            String categoryIDParam = request.getParameter("categoryID");
+            
+            if (categoryIDParam != null && !categoryIDParam.isEmpty()) {
+                // Nếu có categoryID, lấy danh sách vật tư theo danh mục
+                int categoryID = Integer.parseInt(categoryIDParam);
+                list = materialDAO.getMaterialsByCategory(categoryID);
+                
+                // Lấy thông tin danh mục để hiển thị tên danh mục
+                Category selectedCategory = categoryDAO.getCategoryByID(categoryID);
+                if (selectedCategory != null) {
+                    request.setAttribute("selectedCategory", selectedCategory);
+                }
+            } else {
+                // Nếu không có categoryID, lấy toàn bộ danh sách vật tư
+                list = materialDAO.getAllMaterials();
+            }
+            
+            // Lấy danh sách tất cả các danh mục
+            categoryList = categoryDAO.getAllCategories();
+            
             request.setAttribute("materials", list);
-            request.setAttribute("subcategoryList", list1sub);
-             request.getRequestDispatcher("materialList.jsp").forward(request, response);
+            request.setAttribute("categories", categoryList);
+            request.getRequestDispatcher("materialList.jsp").forward(request, response);
             
         } catch (Exception e) {
             e.printStackTrace(); 
             request.setAttribute("error", "Không thể tải danh sách vật tư: " + e.getMessage());
             request.getRequestDispatcher("materialList.jsp").forward(request, response);
-        }
-
-       
-    
+        } 
 }
 
 /**
