@@ -39,127 +39,127 @@
                     <c:if test="${fn:contains(feature.url, '/manage-user') || 
                                   fn:contains(feature.url, '/add-user')|| 
                                   fn:contains(feature.url, '/reset-password-request-list')}">
-                                            <c:set var="hasAdmin" value="true" />
-                                        </c:if>
-                                    </c:forEach>
-                                    <c:if test="${hasAdmin}">
-                                        <li class="dropdown">
-                                            <div class="dropdown-toggle" onclick="toggleDropdown(this)">
-                                                <span><i class="fas fa-users"></i> Quản lý người dùng</span>
-                                                <i class="fas fa-chevron-down"></i>
-                                            </div>
-                                            <div class="dropdown-content">
-                                                <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
-                                                    <c:if test="${feature.url == '/manage-user'}">
-                                                        <a href="${pageContext.request.contextPath}/manage-user">Xem
-                                                            danh sách người dùng</a>
-                                                    </c:if>
-                                                </c:forEach>
-                                                <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
-                                                    <c:if test="${feature.url == '/add-user'}">
-                                                        <a href="${pageContext.request.contextPath}/add-user">Thêm mới
-                                                            người dùng</a>
-                                                    </c:if>
-                                                </c:forEach>
-                                                <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
-                                                    <c:if test="${feature.url == '/reset-password-request-list'}">
-                                                        <a
-                                                            href="${pageContext.request.contextPath}/reset-password-request-list">Danh
-                                                            sách yêu cầu reset mật khẩu</a>
-                                                    </c:if>
-                                                </c:forEach>
-                                            </div>
-                                        </li>
+                        <c:set var="hasAdmin" value="true" />
+                    </c:if>
+                </c:forEach>
+                <c:if test="${hasAdmin}">
+                    <li class="dropdown">
+                        <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                            <span><i class="fas fa-users"></i> Quản lý người dùng</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="dropdown-content">
+                            <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
+                                <c:if test="${feature.url == '/manage-user'}">
+                                    <a href="${pageContext.request.contextPath}/manage-user">Xem
+                                        danh sách người dùng</a>
                                     </c:if>
+                                </c:forEach>
+                                <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
+                                    <c:if test="${feature.url == '/add-user'}">
+                                    <a href="${pageContext.request.contextPath}/add-user">Thêm mới
+                                        người dùng</a>
+                                    </c:if>
+                                </c:forEach>
+                                <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
+                                    <c:if test="${feature.url == '/reset-password-request-list'}">
+                                    <a
+                                        href="${pageContext.request.contextPath}/reset-password-request-list">Danh
+                                        sách yêu cầu reset mật khẩu</a>
+                                    </c:if>
+                                </c:forEach>
+                        </div>
+                    </li>
+                </c:if>
 
-                                    <c:set var="hasDecentralization" value="false" />
-                                    <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
-                                        <c:if test="${fn:contains(feature.url, '/decentralization')}">
-                                            <c:set var="hasDecentralization" value="true" />
-                                        </c:if>
-                                    </c:forEach>
-                                    <c:if test="${hasDecentralization}">
-                                        <li class="dropdown">
-                                            <div class="dropdown-toggle" onclick="toggleDropdown(this)">
-                                                <span><i class="fas fa-boxes"></i>Phân quyền</span>
-                                                <i class="fas fa-chevron-down"></i>
-                                            </div>
-                                            <div class="dropdown-content">
-                                                <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
-                                                    <c:if test="${feature.url == '/decentralization'}">
-                                                        <a href="${pageContext.request.contextPath}/decentralization">Phân
-                                                            quyền chức năng</a>
-                                                    </c:if>
-                                                </c:forEach>
-                                            </div>
-                                        </li>
+                <c:set var="hasDecentralization" value="false" />
+                <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
+                    <c:if test="${fn:contains(feature.url, '/decentralization')}">
+                        <c:set var="hasDecentralization" value="true" />
+                    </c:if>
+                </c:forEach>
+                <c:if test="${hasDecentralization}">
+                    <li class="dropdown">
+                        <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                            <span><i class="fas fa-boxes"></i>Phân quyền</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="dropdown-content">
+                            <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
+                                <c:if test="${feature.url == '/decentralization'}">
+                                    <a href="${pageContext.request.contextPath}/decentralization">Phân
+                                        quyền chức năng</a>
                                     </c:if>
-                                    <!-- Kiểm tra thông tin cá nhân -->
-                                    <c:set var="hasProfile" value="false" />
-                                    <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
-                                        <c:if test="${fn:contains(feature.url, '/profile') || 
+                                </c:forEach>
+                        </div>
+                    </li>
+                </c:if>
+                <!-- Kiểm tra thông tin cá nhân -->
+                <c:set var="hasProfile" value="false" />
+                <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
+                    <c:if test="${fn:contains(feature.url, '/profile') || 
                                   fn:contains(feature.url, '/change-password')}">
-                                            <c:set var="hasProfile" value="true" />
-                                        </c:if>
-                                    </c:forEach>
+                        <c:set var="hasProfile" value="true" />
+                    </c:if>
+                </c:forEach>
 
-                                    <c:if test="${hasProfile}">
-                                        <li class="dropdown">
-                                            <div class="dropdown-toggle" onclick="toggleDropdown(this)">
-                                                <span><i class="fas fa-user"></i> Thông tin cá nhân</span>
-                                                <i class="fas fa-chevron-down"></i>
-                                            </div>
-                                            <div class="dropdown-content">
-                                                <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
-                                                    <c:if test="${feature.url == '/profile'}">
-                                                        <a href="${pageContext.request.contextPath}/profile">Xem thông
-                                                            tin cá nhân</a>
-                                                    </c:if>
-                                                </c:forEach>
-                                                <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
-                                                    <c:if test="${feature.url == '/change-password'}">
-                                                        <a href="${pageContext.request.contextPath}/change-password">Thay
-                                                            đổi mật khẩu</a>
-                                                    </c:if>
-                                                </c:forEach>
-                                            </div>
-                                        </li>
+                <c:if test="${hasProfile}">
+                    <li class="dropdown">
+                        <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                            <span><i class="fas fa-user"></i> Thông tin cá nhân</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="dropdown-content">
+                            <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
+                                <c:if test="${feature.url == '/profile'}">
+                                    <a href="${pageContext.request.contextPath}/profile">Xem thông
+                                        tin cá nhân</a>
                                     </c:if>
+                                </c:forEach>
+                                <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
+                                    <c:if test="${feature.url == '/change-password'}">
+                                    <a href="${pageContext.request.contextPath}/change-password">Thay
+                                        đổi mật khẩu</a>
+                                    </c:if>
+                                </c:forEach>
+                        </div>
+                    </li>
+                </c:if>
 
-                                    <c:set var="hasCategory" value="false" />
-                                    <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
-                                        <c:if test="${fn:contains(feature.url, '/manage-category') || 
+                <c:set var="hasCategory" value="false" />
+                <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
+                    <c:if test="${fn:contains(feature.url, '/manage-category') || 
                                   fn:contains(feature.url, '/manage-category?action=addForm')}">
-                                            <c:set var="hasCategory" value="true" />
-                                        </c:if>
-                                    </c:forEach>
-                                    <c:if test="${hasCategory}">
-                                        <li class="dropdown">
-                                            <div class="dropdown-toggle" onclick="toggleDropdown(this)">
-                                                <span><i class="fas fa-folder"></i> Quản lý danh mục vật tư</span>
-                                                <i class="fas fa-chevron-down"></i>
-                                            </div>
-                                            <div class="dropdown-content">
-                                                <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
-                                                    <c:if test="${feature.url == '/manage-category'}">
-                                                        <a href="${pageContext.request.contextPath}/manage-category">Xem
-                                                            danh mục vật tư</a>
-                                                    </c:if>
-                                                </c:forEach>
-                                                <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
-                                                    <c:if test="${feature.url == '/manage-category?action=addForm'}">
-                                                        <a
-                                                            href="${pageContext.request.contextPath}/manage-category?action=addForm">Thêm
-                                                            mới danh mục vật tư</a>
-                                                    </c:if>
-                                                </c:forEach>
-                                            </div>
-                                        </li>
+                        <c:set var="hasCategory" value="true" />
+                    </c:if>
+                </c:forEach>
+                <c:if test="${hasCategory}">
+                    <li class="dropdown">
+                        <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                            <span><i class="fas fa-folder"></i> Quản lý danh mục vật tư</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="dropdown-content">
+                            <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
+                                <c:if test="${feature.url == '/manage-category'}">
+                                    <a href="${pageContext.request.contextPath}/manage-category">Xem
+                                        danh mục vật tư</a>
                                     </c:if>
+                                </c:forEach>
+                                <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
+                                    <c:if test="${feature.url == '/manage-category?action=addForm'}">
+                                    <a
+                                        href="${pageContext.request.contextPath}/manage-category?action=addForm">Thêm
+                                        mới danh mục vật tư</a>
+                                    </c:if>
+                                </c:forEach>
+                        </div>
+                    </li>
+                </c:if>
 
-                                    <c:set var="hasMaterial" value="false" />
-                                    <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
-                                        <c:if test="${fn:contains(feature.url, '/manage-material')|| 
+                <c:set var="hasMaterial" value="false" />
+                <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
+                    <c:if test="${fn:contains(feature.url, '/manage-material')|| 
                                   fn:contains(feature.url, '/add-material')|| 
                                   fn:contains(feature.url, '/edit-material')|| 
                                   fn:contains(feature.url, '/list-units')}">
@@ -194,7 +194,9 @@
                 </c:if>
                 <c:set var="hasCreateExportOrder" value="false" />
                 <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
-                    <c:if test="${fn:contains(feature.url, '/create-export-order')}">
+                    <c:if test="${fn:contains(feature.url, '/create-export-order')|| 
+                                  fn:contains(feature.url, '/import-materials')|| 
+                                  fn:contains(feature.url, '/import-materials?action=showImportFromDirector')}">
                         <c:set var="hasCreateExportOrder" value="true" />
                     </c:if>
                 </c:forEach>
@@ -209,22 +211,88 @@
                                 <c:if test="${feature.url == '/create-export-order'}">
                                     <a href="${pageContext.request.contextPath}/create-export-order" >Đơn xin xuất kho</a>
                                 </c:if>
-                            </c:forEach>                  
+                            </c:forEach>      
+                            <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
+                                <c:if test="${feature.url == '/import-materials'}">
+                                    <a href="${pageContext.request.contextPath}/import-materials">Nhập kho vật tư</a>
+                                </c:if>
+                                <c:if test="${feature.url == '/import-materials?action=showImportFromDirector'}">
+                                    <a href="${pageContext.request.contextPath}/import-materials?action=showImportFromDirector">Nhập kho từ đơn đã duyệt</a>
+                                </c:if>
+                            </c:forEach>
                         </div>
                     </li>
                 </c:if>
 
-                <li class="dropdown">
-                    <div class="dropdown-toggle" onclick="toggleDropdown(this)">
-                        <span><i class="fas fa-list"></i> Danh sách các yêu cầu</span>
-                        <i class="fas fa-chevron-down"></i>
-                    </div>
-                    <div class="dropdown-content">
-                        <a href="${pageContext.request.contextPath}/request-for-staff">Yêu cầu của tôi</a>
-                        <a href="${pageContext.request.contextPath}/request-for-director">Các yêu cầu </a>
-                    </div>
-
-                </li>
+                <c:set var="hasRequestMenu" value="false" />
+                <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
+                    <c:if test="${fn:contains(feature.url, '/request-for-staff') || fn:contains(feature.url, '/request-for-director')}">
+                        <c:set var="hasRequestMenu" value="true" />
+                    </c:if>
+                </c:forEach>
+                <c:if test="${hasRequestMenu}">
+                    <li class="dropdown">
+                        <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                            <span><i class="fas fa-list"></i> Danh sách các yêu cầu</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="dropdown-content">
+                            <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
+                                <c:if test="${feature.url == '/request-for-staff'}">
+                                    <a href="${pageContext.request.contextPath}/request-for-staff">Yêu cầu của tôi</a>
+                                </c:if>
+                                <c:if test="${feature.url == '/request-for-director'}">
+                                    <a href="${pageContext.request.contextPath}/request-for-director">Các yêu cầu</a>
+                                </c:if>
+                            </c:forEach>
+                        </div>
+                    </li>
+                </c:if>
+                <c:set var="hasManageHistory" value="false" />
+                <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
+                    <c:if test="${fn:contains(feature.url, '/manage-history')}">
+                        <c:set var="hasManageHistory" value="true" />
+                    </c:if>
+                </c:forEach>
+                <c:if test="${hasManageHistory}">
+                    <li class="dropdown">
+                        <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                            <span><i class="fas fa-history"></i> Lịch sử nhập/xuất kho</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="dropdown-content">
+                            <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
+                                <c:if test="${feature.url == '/manage-history'}">
+                                    <a href="${pageContext.request.contextPath}/manage-history">Xem lịch sử nhập/xuất kho</a>
+                                </c:if>
+                            </c:forEach>
+                        </div>
+                    </li>
+                </c:if>
+                <c:set var="hasCreateRequestMenu" value="false" />
+                <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
+                    <c:if test="${fn:contains(feature.url, '/purchase-request') || fn:contains(feature.url, '/repair-request')}">
+                        <c:set var="hasCreateRequestMenu" value="true" />
+                    </c:if>
+                </c:forEach>
+                <c:if test="${hasCreateRequestMenu}">
+                    <li class="dropdown">
+                        <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                            <span><i class="fas fa-list"></i> Tạo yêu cầu</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="dropdown-content">
+                            <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
+                                <c:if test="${feature.url == '/purchase-request'}">
+                                    <a href="${pageContext.request.contextPath}/purchase-request">Yêu cầu mua mới vật tư</a>
+                                </c:if>
+                                <c:if test="${feature.url == '/repair-request'}">
+                                    <a href="${pageContext.request.contextPath}/repair-request">Yêu cầu mua sửa chữa vật tư</a>
+                                </c:if>
+                            </c:forEach>
+                        </div>
+                    </li>
+                </c:if>
             </ul>
         </div>
         <script src="<%= request.getContextPath() %>/js/script.js"></script>
