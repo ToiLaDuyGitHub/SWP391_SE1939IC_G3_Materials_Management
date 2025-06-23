@@ -57,42 +57,59 @@
             .search-container {
                 display: flex;
                 justify-content: center;
+                align-items: center;
                 margin-bottom: 20px;
-                position: relative;
+                background: #f9f9f9;
+                padding: 15px;
+                border-radius: 10px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                max-width: 1200px;
+                margin-left: auto;
+                margin-right: auto;
             }
-            .search-container input[type="text"] {
-                width: 50%;
-                padding: 10px;
-                border: 1px solid #ddd;
-                border-radius: 6px;
+            .search-container form {
+                display: flex;
+                align-items: center;
+                width: 100%;
+                gap: 10px;
+            }
+            .search-container input[type="text"],
+            .search-container select {
+                padding: 12px 15px;
+                border: 2px solid #e0e0e0;
+        border-radius: 25px;
                 font-size: 14px;
-                font-family: Arial, sans-serif;
-                transition: border 0.3s, box-shadow 0.3s, transform 0.2s;
-            }
-            .search-container input[type="text"]:focus {
-                border-color: #f9a825;
-                box-shadow: 0 0 8px rgba(249, 168, 37, 0.3);
-                transform: scale(1.01);
+                font-family: 'Poppins', sans-serif;
                 outline: none;
+                transition: border-color 0.3s, box-shadow 0.3s;
+                flex: 1;
+                background: #fff;
+            }
+            .search-container input[type="text"]:focus,
+            .search-container select:focus {
+                border-color: #4a90e2;
+                box-shadow: 0 0 8px rgba(74, 144, 226, 0.3);
             }
             .search-container button {
-                margin-left: 10px;
-                padding: 12px 20px;
-                background: linear-gradient(90deg, #4a90e2, #6aa8e6);
+                padding: 12px 25px;
+                background: linear-gradient(90deg, #4a90e2, #50e3c2);
                 color: #fff;
                 border: none;
-                border-radius: 6px;
+                border-radius: 25px;
                 cursor: pointer;
                 font-size: 16px;
-                font-family: Arial, sans-serif;
+                font-family: 'Poppins', sans-serif;
                 display: flex;
                 align-items: center;
                 gap: 8px;
                 transition: background 0.3s, transform 0.2s;
             }
             .search-container button:hover {
-                background: linear-gradient(90deg, #6aa8e6, #4a90e2);
-                transform: scale(1.02);
+                background: linear-gradient(90deg, #50e3c2, #4a90e2);
+                transform: translateY(-2px);
+            }
+            .search-container button i {
+                font-size: 16px;
             }
             .error-message {
                 background-color: #f44336;
@@ -215,15 +232,29 @@
             <%@ include file="sidebar.jsp" %>
             <div class="content" id="contentArea">
                 <div class="content-card hidden" id="materialListSection">
-                    <!-- Biểu mẫu tìm kiếm -->
-                    <form action="${pageContext.request.contextPath}/search-material-in-list" method="get">
-                        <div class="form-group">
-                            <div class="search-container">
-                                <input type="text" id="searchMaterial" name="searchMaterial" placeholder="Nhập tên vật tư để tìm kiếm" value="${param.searchMaterial}">
-                                <button type="submit"><i class="fas fa-search"></i> Tìm kiếm</button>
-                            </div>
-                        </div>
-                    </form>
+                    <!-- Form tìm kiếm -->
+                    <div class="search-container">
+                        <form action="${pageContext.request.contextPath}/search-material" method="get">
+                            <input type="text" name="keyword" placeholder="Nhập từ khóa (ví dụ: búa)" value="${param.keyword}">
+                            <select name="categoryId">
+                                <option value="">Tất cả danh mục</option>
+                                <c:forEach var="category" items="${categories}">
+                                    <option value="${category.categoryID}" ${param.categoryId == category.categoryID ? 'selected' : ''}>
+                                        ${category.categoryName}
+                                    </option>
+                                </c:forEach>
+                            </select>
+                            <select name="supplierId">
+                                <option value="">Tất cả nhà cung cấp</option>
+                                <c:forEach var="supplier" items="${suppliers}">
+                                    <option value="${supplier.supplierID}" ${param.supplierId == supplier.supplierID ? 'selected' : ''}>
+                                        ${supplier.supplierName}
+                                    </option>
+                                </c:forEach>
+                            </select>
+                            <button type="submit"><i class="fas fa-search"></i> Tìm kiếm</button>
+                        </form>
+                    </div>
                                 
                     <c:if test="${not empty sessionScope.successMessage}">
                         <div class="success-message">
@@ -298,17 +329,11 @@
 
                     <!-- Pagination Controls -->
                     <div class="pagination">
-                        <c:if test="${page > 1}">
-                            <a href="${pageContext.request.contextPath}/manage-material?page=${page - 1}">&laquo; Trước</a>
-                        </c:if>
-
+                      
                         <c:forEach var="i" begin="1" end="${totalPages}">
-                            <a href="${pageContext.request.contextPath}/manage-material?page=${i}" class="${i == page ? 'active' : ''}">${i}</a>
+                           <a href="${pageContext.request.contextPath}/search-material?keyword=${param.keyword}&categoryId=${param.categoryId}&supplierId=${param.supplierId}&page=${i}" class="${i == page ? 'active' : ''}">${i}</a>
                         </c:forEach>
 
-                        <c:if test="${page < totalPages}">
-                            <a href="${pageContext.request.contextPath}/manage-material?page=${page + 1}">Tiếp &raquo;</a>
-                        </c:if>
                     </div>
                 </div>
 

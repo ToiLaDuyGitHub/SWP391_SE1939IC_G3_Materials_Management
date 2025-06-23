@@ -7,26 +7,25 @@ package controller;
 
 import dao.RequestDAO;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.List;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.List;
+import jakarta.servlet.http.HttpSession;
 import model.dto.RequestDTO;
-import java.sql.SQLException;
+import model.User;
+import model.dto.User_Role;
+
+
 /**
  *
  * @author Admin
  */
-@WebServlet(name="RequestForDirector", urlPatterns={"/request-for-director"})
-public class RequestForDirector extends HttpServlet {
-   private RequestDAO requestDAO;
-    @Override
-    public void init() throws ServletException {
-        requestDAO = new RequestDAO();
-    }
+@WebServlet(name="RequestsForStaff", urlPatterns={"/request-for-staff"})
+public class RequestsForStaff extends HttpServlet {
+   
     /** 
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
      * @param request servlet request
@@ -47,32 +46,37 @@ public class RequestForDirector extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException {
-        
         try {
-            // Lấy danh sách tất cả yêu cầu
-            List<RequestDTO> allRequests = requestDAO.getAllRequests();
-            // Lấy chi tiết (bao gồm danh sách vật tư) cho từng yêu cầu
-            for (RequestDTO req : allRequests) {
-                try {
-                    RequestDTO detail = requestDAO.getRequestDetail(req.getRequestId(), req.getRequestType());
-                    req.setMaterials(detail.getMaterials());
-                    if (detail.getMaterials() == null || detail.getMaterials().isEmpty()) {
-                        System.out.println("Không có vật tư cho yêu cầu ID: " + req.getRequestId());
-                    }
-                } catch (SQLException e) {
-                    System.err.println("Lỗi khi lấy chi tiết yêu cầu ID " + req.getRequestId() + ": " + e.getMessage());
-                    e.printStackTrace();
-                }
+            // Lấy phiên và kiểm tra người dùng đã xác thực
+            HttpSession session = request.getSession(false);
+            User_Role userRole = (session != null) ? (User_Role) session.getAttribute("userRole") : null;
+
+            if (userRole == null || !userRole.isIsActive()) {
+                // Nếu người dùng chưa đăng nhập hoặc tài khoản không hoạt động, chuyển hướng đến trang đăng nhập
+                request.setAttribute("errorMessage", "Vui lòng đăng nhập để xem danh sách yêu cầu!");
+                request.getRequestDispatcher("/auth/login.jsp").forward(request, response);
+                return;
             }
-            request.setAttribute("processedRequests", allRequests);
-            // Chuyển tiếp đến JSP
-            request.getRequestDispatcher("/Request/Request_List_Director.jsp").forward(request, response);
+
+            // Lấy userId từ userRole (giả sử User_Role có phương thức getUserId)
+            int userId = userRole.getUserID(); // Cần đảm bảo User_Role có phương thức này
+
+            // Lấy các yêu cầu do người dùng tạo bằng RequestDAO
+            RequestDAO requestDAO = new RequestDAO();
+            List<RequestDTO> userRequests = requestDAO.getRequestsByCreator(userId);
+
+            // Đặt danh sách yêu cầu làm thuộc tính
+            request.setAttribute("processedRequests", userRequests);
+
+            // Chuyển hướng đến Request_List.jsp để hiển thị
+            request.getRequestDispatcher("/Request/Request_List.jsp").forward(request, response);
+
         } catch (Exception e) {
+            // Xử lý lỗi
             e.printStackTrace();
-            request.setAttribute("error", "Lỗi khi lấy danh sách yêu cầu: " + e.getMessage());
-            request.getRequestDispatcher("/Request/Request_List_Director.jsp").forward(request, response);
+            request.setAttribute("error", "Đã xảy ra lỗi khi lấy danh sách yêu cầu: " + e.getMessage());
+            request.getRequestDispatcher("/error.jsp").forward(request, response);
         }
-        
     } 
 
     /** 

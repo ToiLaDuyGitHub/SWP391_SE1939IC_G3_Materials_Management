@@ -188,11 +188,7 @@
                                     <a href="${pageContext.request.contextPath}/add-material" >Thêm mới vật tư</a>
                                 </c:if>
                             </c:forEach>
-                            <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
-                                <c:if test="${feature.url == '/edit-material'}">
-                                    <a href="${pageContext.request.contextPath}/edit-material" >Sửa thông tin vật tư</a>
-                                </c:if>
-                            </c:forEach>
+
                         </div>
                     </li>
                 </c:if>
@@ -224,7 +220,7 @@
                         <i class="fas fa-chevron-down"></i>
                     </div>
                     <div class="dropdown-content">
-                        <a href="Request/Request_List.jsp">Các yêu cầu xuất kho đã xử lý</a>
+                        <a href="${pageContext.request.contextPath}/request-for-staff">Yêu cầu của tôi</a>
                         <a href="${pageContext.request.contextPath}/request-for-director">Các yêu cầu </a>
                     </div>
 
