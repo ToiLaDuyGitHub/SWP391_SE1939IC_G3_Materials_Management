@@ -6,6 +6,7 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html>
     <head>
@@ -15,18 +16,6 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/styles.css">
         <style>
-            .search-container {
-                margin-bottom: 20px;
-                display: flex;
-                gap: 10px;
-                align-items: center;
-            }
-            .search-container input[type="text"] {
-                width: 300px;
-                padding: 10px;
-                border: 1px solid #ddd;
-                border-radius: 6px;
-            }
             .material-table {
                 width: 100%;
                 min-width: 1400px;
@@ -113,7 +102,6 @@
                 border-radius: 4px;
                 box-sizing: border-box;
                 background: #f9f9f9;
-                
             }
             .modal .material-table {
                 margin-top: 15px;
@@ -130,29 +118,160 @@
                 border-radius: 4px;
                 cursor: pointer;
                 font-size: 14px;
+                margin: 0 5px;
             }
             .material-table td button:hover {
                 background: #357abd;
+            }
+            .modal .button-group {
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+                margin-top: 20px;
+            }
+            .modal .button-group button.approve-btn {
+                background: #28a745;
+            }
+            .modal .button-group button.approve-btn:hover {
+                background: #218838;
+            }
+            .modal .button-group button.reject-btn {
+                background: #dc3545;
+            }
+            .modal .button-group button.reject-btn:hover {
+                background: #c82333;
+            }
+            .notification {
+                margin-bottom: 20px;
+                padding: 10px;
+                border-radius: 4px;
+                font-size: 14px;
+                text-align: center;
+            }
+            .notification.success {
+                background: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+            }
+            .notification.error {
+                background: #f8d7da;
+                color: #721c24;
+                border: 1px solid #f5c6cb;
+            }
+            /* Search Styles */
+            .search-container {
+                margin: 20px 0;
+                padding: 15px;
+                background: #f9f9f9;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            .search-form {
+                display: flex;
+                justify-content: center;
+                width: 100%;
+            }
+            .search-row {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 15px;
+                align-items: center;
+                width: 100%;
+                max-width: 1200px;
+            }
+            .input-group {
+                position: relative;
+                flex: 1;
+                min-width: 200px;
+            }
+            .input-group i {
+                position: absolute;
+                top: 50%;
+                left: 12px;
+                transform: translateY(-50%);
+                color: #4a90e2;
+                font-size: 16px;
+            }
+            .input-group input,
+            .input-group select {
+                width: 100%;
+                padding: 10px 15px 10px 40px;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                font-size: 14px;
+                background: #fff;
+                transition: border-color 0.3s, box-shadow 0.3s;
+            }
+            .input-group input:focus,
+            .input-group select:focus {
+                outline: none;
+                border-color: #4a90e2;
+                box-shadow: 0 0 5px rgba(74, 144, 226, 0.3);
+            }
+            .input-group input::placeholder {
+                color: #999;
+            }
+            .search-btn {
+                padding: 10px 20px;
+                background: #4a90e2;
+                color: #fff;
+                border: none;
+                border-radius: 6px;
+                font-size: 14px;
+                cursor: pointer;
+                transition: background 0.3s;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+            .search-btn:hover {
+                background: #357abd;
+            }
+            /* Pagination Styles (from materialList.jsp) */
+            .pagination {
+                display: flex;
+                justify-content: center;
+                margin-top: 20px;
+            }
+            .pagination a {
+                color: #4a90e2;
+                padding: 8px 16px;
+                text-decoration: none;
+                border: 1px solid #ddd;
+                margin: 0 4px;
+                border-radius: 3px;
+            }
+            .pagination a.active {
+                background-color: #4a90e2;
+                color: white;
+                border: 1px solid #4a90e2;
+            }
+            .pagination a:hover:not(.active) {
+                background-color: #ddd;
             }
             @media (max-width: 1200px) {
                 .content-card {
                     max-width: 95%;
                     padding: 15px;
                 }
-                .search-container input[type="text"] {
-                    width: 200px;
+                .input-group {
+                    min-width: 180px;
                 }
                 .material-table {
                     min-width: 1000px;
                 }
             }
             @media (max-width: 768px) {
-                .search-container {
+                .search-row {
                     flex-direction: column;
                     gap: 10px;
                 }
-                .search-container input[type="text"] {
+                .input-group {
+                    min-width: 100%;
+                }
+                .search-btn {
                     width: 100%;
+                    justify-content: center;
                 }
                 .material-table {
                     min-width: 800px;
@@ -168,42 +287,96 @@
         <div class="content">
             <div class="" id="requestListSection">
                 <h2><i class="fas fa-list"></i> Danh sách yêu cầu </h2>
+                <!-- Hiển thị thông báo từ session -->
+                <c:if test="${not empty sessionScope.message}">
+                    <div class="notification ${sessionScope.messageType eq 'error' ? 'error' : 'success'}">${fn:escapeXml(sessionScope.message)}</div>
+                    <% session.removeAttribute("message"); session.removeAttribute("messageType"); %>
+                </c:if>
+                <!-- Search Form -->
                 <div class="search-container">
-                    <input type="text" id="searchInput" placeholder="Tìm kiếm yêu cầu..." onkeyup="searchTable()">
-                    <button onclick="searchTable()"><i class="fas fa-search"></i> Tìm</button>
+                    <form action="${pageContext.request.contextPath}/search-director-request" method="get" class="search-form">
+                        <div class="search-row">
+                            <div class="input-group">
+                                <i class="fas fa-search"></i>
+                                <input type="text" name="requestCode" placeholder="Mã đơn (VD: EP01)" value="${param.requestCode}">
+                            </div>
+                            <div class="input-group">
+                                <i class="fas fa-calendar-alt"></i>
+                                <input type="date" name="startDate" value="${param.startDate}" placeholder="Ngày bắt đầu">
+                            </div>
+                            <div class="input-group">
+                                <i class="fas fa-calendar-alt"></i>
+                                <input type="date" name="endDate" value="${param.endDate}" placeholder="Ngày kết thúc">
+                            </div>
+                            <div class="input-group">
+                                <i class="fas fa-user"></i>
+                                <select name="createdById">
+                                    <option value="">Chọn nhân viên</option>
+                                    <c:forEach var="user" items="${userList}">
+                                        <option value="${user.userID}" ${param.createdById == user.userID ? 'selected' : ''}>${fn:escapeXml(user.lastName)} ${fn:escapeXml(user.firstName)}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                            <button type="submit" class="search-btn"><i class="fas fa-search"></i> Tìm kiếm</button>
+                        </div>
+                    </form>
                 </div>
                 <div class="material-table">
-                    <table>
-                        <tr>
-                            <th>Mã đơn</th>
-                            <th>Loại đơn</th>
-                            <th>Ngày tạo</th>
-                            <th>Người tạo</th>
-                            <th>Tình trạng</th>
-                            <th>Hành động</th>
-                        </tr>
-                        <c:choose>
-                            <c:when test="${not empty processedRequests}">
-                                <c:forEach var="request" items="${processedRequests}">
+                    <table id="requestTable">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Loại đơn</th>
+                                <th>Ngày tạo</th>
+                                <th>Người tạo</th>
+                                <th>Tình trạng</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requestTableBody">
+                            <c:set var="page" value="${param.page != null ? param.page : 1}" />
+                            <c:set var="itemsPerPage" value="6" />
+                            <c:set var="start" value="${(page - 1) * itemsPerPage}" />
+                            <c:set var="end" value="${start + itemsPerPage - 1}" />
+                            <c:set var="totalItems" value="${processedRequests.size()}" />
+                            <c:set var="totalPages" value="${(totalItems + itemsPerPage - 1) / itemsPerPage}" />
+                            <c:choose>
+                                <c:when test="${not empty processedRequests}">
+                                    <c:forEach var="request" items="${processedRequests}" begin="${start}" end="${end}">
+                                        <tr>
+                                            <td>${fn:escapeXml(request.requestCode)}</td>
+                                            <td>${fn:escapeXml(request.requestType)}</td>
+                                            <td>${fn:escapeXml(request.createdDate)}</td>
+                                            <td>${fn:escapeXml(request.createdByName)}</td>
+                                            <td>${fn:escapeXml(request.statusText)}</td>
+                                            <td>
+                                                <button onclick="showRequestDetail(
+                                                                '${fn:escapeXml(request.requestCode)}',
+                                                                '${fn:escapeXml(request.requestType)}',
+                                                                '${fn:escapeXml(request.createdDate)}',
+                                                                '${fn:escapeXml(request.createdByName)}',
+                                                                '${fn:escapeXml(request.statusText)}',
+                                                        ${request.status},
+                                                        [<c:forEach var="material" items="${request.materials}" varStatus="status">{materialId:${material.materialId}, materialName:'${fn:escapeXml(material.materialName)}', quantity:${material.quantity}}${status.last ? '' : ','}</c:forEach>]
+                                                                )">Xem chi tiết</button>
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
+                                </c:when>
+                                <c:otherwise>
                                     <tr>
-                                        <td>${request.requestCode}</td>
-                                        <td>${request.requestType}</td>
-                                        <td>${request.createdDate}</td>
-                                        <td>${request.createdByName}</td>
-                                        <td>${request.statusText}</td>
-                                        <td>
-                                            <button onclick="showRequestDetail('${request.requestId}')">Xem chi tiết</button>
-                                        </td>
+                                        <td colspan="6">Không có yêu cầu nào để hiển thị.</td>
                                     </tr>
-                                </c:forEach>
-                            </c:when>
-                            <c:otherwise>
-                                <tr>
-                                    <td colspan="6">Không có yêu cầu nào để hiển thị.</td>
-                                </tr>
-                            </c:otherwise>
-                        </c:choose>
+                                </c:otherwise>
+                            </c:choose>
+                        </tbody>
                     </table>
+                </div>
+                <!-- Pagination Controls -->
+                <div class="pagination">
+                    <c:forEach var="i" begin="1" end="${totalPages}">
+                        <a href="${pageContext.request.contextPath}/search-director-request?requestCode=${param.requestCode}&startDate=${param.startDate}&endDate=${param.endDate}&createdById=${param.createdById}&page=${i}" class="${i == page ? 'active' : ''}">${i}</a>
+                    </c:forEach>
                 </div>
             </div>
         </div>
@@ -244,50 +417,30 @@
                             <th>Số lượng</th>
                         </tr>
                         <tbody id="materialTableBody">
-                            <tr><td></td><td></td></tr> <!-- Placeholder row -->
+                            <tr><td colspan="2">Không có vật tư</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
             <div class="button-group">
+                <!-- Form cho nút Duyệt -->
+                <form id="approveForm" action="${pageContext.request.contextPath}/update-request-status" method="POST" style="display: none;">
+                    <input type="hidden" name="requestCode" id="approveRequestCode">
+                    <input type="hidden" name="requestType" id="approveRequestType">
+                    <input type="hidden" name="action" value="approve">
+                    <button type="submit" class="approve-btn">Duyệt</button>
+                </form>
+                <!-- Form cho nút Từ chối -->
+                <form id="rejectForm" action="${pageContext.request.contextPath}/update-request-status" method="POST" style="display: none;">
+                    <input type="hidden" name="requestCode" id="rejectRequestCode">
+                    <input type="hidden" name="requestType" id="rejectRequestType">
+                    <input type="hidden" name="action" value="reject">
+                    <button type="submit" class="reject-btn">Từ chối</button>
+                </form>
                 <button class="close-btn" onclick="closeEditModal()">Đóng</button>
             </div>
         </div>
         <div id="editModalOverlay" class="modal-overlay"></div>
-        <script>
-            function searchTable() {
-                let input = document.getElementById("searchInput").value.toLowerCase();
-                let table = document.getElementById("requestTableBody");
-                let tr = table.getElementsByTagName("tr");
-
-                for (let i = 0; i < tr.length; i++) {
-                    let td = tr[i].getElementsByTagName("td");
-                    let found = false;
-                    for (let j = 0; j < td.length - 1; j++) {
-                        if (td[j]) {
-                            let text = td[j].textContent || td[j].innerText;
-                            if (text.toLowerCase().indexOf(input) > -1) {
-                                found = true;
-                                break;
-                            }
-                        }
-                    }
-                    tr[i].style.display = found ? "" : "none";
-                }
-            }
-
-            function showRequestDetail(requestId) {
-                document.getElementById("editModal").classList.add("show");
-                document.getElementById("editModalOverlay").classList.add("show");
-            }
-
-            function closeEditModal() {
-                document.getElementById("editModal").classList.remove("show");
-                document.getElementById("editModalOverlay").classList.remove("show");
-            }
-
-            // Close modal when clicking overlay
-            document.getElementById("editModalOverlay").addEventListener("click", closeEditModal);
-        </script>
+        <script src="${pageContext.request.contextPath}/js/script.js"></script>
     </body>
 </html>

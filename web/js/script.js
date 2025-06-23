@@ -70,8 +70,6 @@ function showContent(sectionId, element) {
     closeSidebarOnMobile();
 }
 
-
-
 function openEditModal() {
     const modal = document.getElementById('editModal');
     const overlay = document.getElementById('editModalOverlay');
@@ -214,7 +212,7 @@ function showPermissions() {
 }
 
 function showMaterialDetail(materialID, name, category, subcategory, supplier, supplierAddress, supplierPhone, totalQuantity, usableQuantity, brokenQuantity, image, detail) {
-    document.getElementById('materialID').value = materialID;   
+    document.getElementById('materialID').value = materialID;
     document.getElementById('materialName').value = name;
     document.getElementById('category').value = category;
     document.getElementById('subcategory').value = subcategory;
@@ -293,19 +291,104 @@ document.addEventListener('DOMContentLoaded', setActiveMenu);
 
 // Gọi lại hàm khi URL thay đổi (cho SPA)
 window.addEventListener('popstate', setActiveMenu);
+
 function viewCart() {
     // Add logic to navigate to cart page or show cart details
     alert("Xem giỏ hàng (Tổng: ${sessionScope.cartCount != null ? sessionScope.cartCount : 0} sản phẩm)");
     // Replace with actual navigation, e.g., window.location.href = '/cart';
 }
-function showRequestDetail(requestId, requestCode, requestType, createdDate, createdByName, approvedByName, statusText) {
-    document.getElementById('requestId').value = requestId;
-    document.getElementById('requestCode').value = requestCode;
-    document.getElementById('requestType').value = requestType;
-    document.getElementById('createdDate').value = createdDate;
-    document.getElementById('createdByName').value = createdByName;
-    document.getElementById('approvedByName').value = approvedByName;
-    document.getElementById('statusText').value = statusText;
 
-    openEditModal();
+function showRequestDetail(requestCode, requestType, createdDate, createdByName, statusText, status, materials) {
+    try {
+        // Hiển thị thông tin yêu cầu trong modal
+        document.getElementById('requestCode').value = requestCode;
+        document.getElementById('requestType').value = requestType;
+        document.getElementById('createdDate').value = createdDate;
+        document.getElementById('createdByName').value = createdByName;
+        document.getElementById('statusText').value = statusText;
+
+        // Gán giá trị cho form
+        document.getElementById('approveRequestCode').value = requestCode;
+        document.getElementById('approveRequestType').value = requestType;
+        document.getElementById('rejectRequestCode').value = requestCode;
+        document.getElementById('rejectRequestType').value = requestType;
+
+        // Hiển thị hoặc ẩn nút "Duyệt" và "Từ chối" dựa trên trạng thái
+        const approveForm = document.getElementById('approveForm');
+        const rejectForm = document.getElementById('rejectForm');
+        if (status === 0) {
+            approveForm.style.display = 'inline-block';
+            rejectForm.style.display = 'inline-block';
+        } else {
+            approveForm.style.display = 'none';
+            rejectForm.style.display = 'none';
+        }
+        // Hiển thị danh sách vật tư
+        const materialTableBody = document.getElementById('materialTableBody');
+        if (materialTableBody) {
+            materialTableBody.innerHTML = ''; // Xóa nội dung cũ
+            if (materials && Array.isArray(materials) && materials.length > 0) {
+                materials.forEach(material => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${material.materialName || 'Không xác định'}</td>
+                        <td>${material.quantity || 0}</td>
+                    `;
+                    materialTableBody.appendChild(row);
+                });
+            } else {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="2">Không có vật tư trong yêu cầu này.</td>';
+                materialTableBody.appendChild(row);
+            }
+        } else {
+            console.error("Không tìm thấy materialTableBody");
+        }
+
+        openEditModal();
+    } catch (error) {
+        console.error("Lỗi khi hiển thị chi tiết yêu cầu: ", error);
+    }
+}
+function showRequestStaff(requestCode, requestType, createdDate, createdByName, approvedByName, status, materials) {
+    try {
+        // Hiển thị thông tin yêu cầu trong modal
+        document.getElementById('requestCode').value = requestCode;
+        document.getElementById('requestType').value = requestType;
+        document.getElementById('createdDate').value = createdDate;
+        document.getElementById('statusText').value = status === 1 ? 'Đã duyệt' : 'Chưa duyệt';
+        document.getElementById('approvedByName').value = approvedByName || 'Chưa có người duyệt';
+
+        // Ẩn các nút "Duyệt" và "Từ chối" vì đây là giao diện cho nhân viên
+        const approveForm = document.getElementById('approveForm');
+        const rejectForm = document.getElementById('rejectForm');
+        if (approveForm) approveForm.style.display = 'none';
+        if (rejectForm) rejectForm.style.display = 'none';
+
+        // Hiển thị danh sách vật tư
+        const materialTableBody = document.getElementById('materialTableBody');
+        if (materialTableBody) {
+            materialTableBody.innerHTML = ''; // Xóa nội dung cũ
+            if (materials && Array.isArray(materials) && materials.length > 0) {
+                materials.forEach(material => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${material.materialName || 'Không xác định'}</td>
+                        <td>${material.quantity || 0}</td>
+                    `;
+                    materialTableBody.appendChild(row);
+                });
+            } else {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="2">Không có vật tư trong yêu cầu này.</td>';
+                materialTableBody.appendChild(row);
+            }
+        } else {
+            console.error("Không tìm thấy materialTableBody");
+        }
+
+        openEditModal();
+    } catch (error) {
+        console.error("Lỗi khi hiển thị chi tiết yêu cầu cho nhân viên: ", error);
+    }
 }

@@ -552,7 +552,84 @@ public class MaterialDAO {
         return materials;
     }
     
-    public void importMaterials(List<Map<String, Integer>> materials, int userID) throws SQLException {
+    // Phương thức lấy tất cả nhà cung cấp
+    public List<Supplier> getAllSuppliers() {
+        List<Supplier> suppliers = new ArrayList<>();
+        String sql = "SELECT SupplierID, SupplierName FROM suppliers";
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                suppliers.add(new Supplier(rs.getInt("SupplierID"), rs.getString("SupplierName"), null, null));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return suppliers;
+    }
+
+    // Phương thức tìm kiếm vật tư dựa trên từ khóa, danh mục và nhà cung cấp
+    public List<Material> searchMaterials(String keyword, String categoryId, String supplierId) {
+        List<Material> list = new ArrayList<>();
+        String sql = "SELECT m.MaterialID, m.MaterialName, m.Image, m.Detail, " +
+                     "c.CategoryID, c.CategoryName, " +
+                     "sc.SubcategoryID, sc.SubcategoryName, " +
+                     "s.SupplierID, s.SupplierName, s.Address, s.PhoneNum, " +
+                     "mq.UsableQuantity, mq.BrokenQuantity, mq.TotalQuantity " +
+                     "FROM materials m " +
+                     "LEFT JOIN categories c ON m.CategoryID = c.CategoryID " +
+                     "LEFT JOIN subcategories sc ON m.SubcategoryID = sc.SubcategoryID " +
+                     "LEFT JOIN suppliers s ON m.SupplierID = s.SupplierID " +
+                     "LEFT JOIN materialquantities mq ON m.MaterialID = mq.MaterialID " +
+                     "WHERE 1=1 ";
+
+        if (keyword != null && !keyword.isEmpty()) {
+            sql += "AND TRIM(LOWER(m.MaterialName)) LIKE ? ";
+        }
+        if (categoryId != null && !categoryId.isEmpty()) {
+            sql += "AND m.CategoryID = ? ";
+        }
+        if (supplierId != null && !supplierId.isEmpty()) {
+            sql += "AND m.SupplierID = ? ";
+        }
+
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            int paramIndex = 1;
+            if (keyword != null && !keyword.isEmpty()) {
+                stmt.setString(paramIndex++, "%" + keyword.trim().toLowerCase() + "%");
+            }
+            if (categoryId != null && !categoryId.isEmpty()) {
+                stmt.setInt(paramIndex++, Integer.parseInt(categoryId));
+            }
+            if (supplierId != null && !supplierId.isEmpty()) {
+                stmt.setInt(paramIndex++, Integer.parseInt(supplierId));
+            }
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Material material = new Material();
+                material.setMaterialID(rs.getInt("MaterialID"));
+                material.setMaterialName(rs.getString("MaterialName"));
+                material.setCategory(new Category(rs.getInt("CategoryID"), rs.getString("CategoryName")));
+                material.setSubcategory(new SubCategory(rs.getInt("SubcategoryID"), rs.getInt("CategoryID"), rs.getString("SubcategoryName")));
+                material.setSupplierID(new Supplier(rs.getInt("SupplierID"), rs.getString("SupplierName"), rs.getString("Address"), rs.getString("PhoneNum")));
+                material.setImage(rs.getString("Image"));
+                material.setDetail(rs.getString("Detail"));
+
+                MaterialQuantity quantity = new MaterialQuantity(
+                        rs.getInt("MaterialID"),
+                        rs.getInt("UsableQuantity"),
+                        rs.getInt("BrokenQuantity"),
+                        rs.getInt("TotalQuantity"));
+                material.setQuantity(quantity);
+                list.add(material);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+    
+    public void importMaterialsForPurchase(List<Map<String, Integer>> materials, int userID, int purchaseRequestID) throws SQLException {
         Connection conn = null;
         PreparedStatement stmtHistory = null;
         PreparedStatement stmtUpdate = null;
@@ -564,9 +641,10 @@ public class MaterialDAO {
             conn.setAutoCommit(false); // Bắt đầu transaction
             
             // 1. Tạo bản ghi trong importhistory
-            String insertHistorySQL = "INSERT INTO importhistory (ImportedByID) VALUES (?)";
+            String insertHistorySQL = "INSERT INTO importhistory (ImportedByID, PurchaseRequestID) VALUES (?, ?)";
             stmtHistory = conn.prepareStatement(insertHistorySQL, Statement.RETURN_GENERATED_KEYS);
             stmtHistory.setInt(1, userID);
+            stmtHistory.setInt(2, purchaseRequestID);
             stmtHistory.executeUpdate();
             
             // Lấy ID của bản ghi vừa tạo
@@ -635,8 +713,8 @@ public class MaterialDAO {
             }
         }
     }
-
-    public void importMaterialsForPurchase(List<Map<String, Integer>> materials, int userID, int purchaseRequestID) throws SQLException {
+    
+    public void importMaterials(List<Map<String, Integer>> materials, int userID) throws SQLException {
         Connection conn = null;
         PreparedStatement stmtHistory = null;
         PreparedStatement stmtUpdate = null;
@@ -648,10 +726,9 @@ public class MaterialDAO {
             conn.setAutoCommit(false); // Bắt đầu transaction
             
             // 1. Tạo bản ghi trong importhistory
-            String insertHistorySQL = "INSERT INTO importhistory (ImportedByID, PurchaseRequestID) VALUES (?, ?)";
+            String insertHistorySQL = "INSERT INTO importhistory (ImportedByID) VALUES (?)";
             stmtHistory = conn.prepareStatement(insertHistorySQL, Statement.RETURN_GENERATED_KEYS);
             stmtHistory.setInt(1, userID);
-            stmtHistory.setInt(2, purchaseRequestID);
             stmtHistory.executeUpdate();
             
             // Lấy ID của bản ghi vừa tạo
