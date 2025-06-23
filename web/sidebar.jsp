@@ -155,7 +155,8 @@
                 <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
                     <c:if test="${fn:contains(feature.url, '/manage-material')|| 
                                   fn:contains(feature.url, '/add-material')|| 
-                                  fn:contains(feature.url, '/edit-material')}">
+                                  fn:contains(feature.url, '/edit-material')|| 
+                                  fn:contains(feature.url, '/list-units')}">
                         <c:set var="hasMaterial" value="true" />
                     </c:if>
                 </c:forEach>
@@ -169,6 +170,11 @@
                             <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
                                 <c:if test="${feature.url == '/manage-material'}">
                                     <a href="${pageContext.request.contextPath}/manage-material">Xem danh sách vật tư</a>
+                                </c:if>
+                            </c:forEach>
+                            <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
+                                <c:if test="${feature.url == '/list-units'}">
+                                    <a href="${pageContext.request.contextPath}/list-units">Danh sách đơn vị vật tư</a>
                                 </c:if>
                             </c:forEach>
                             <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
@@ -208,14 +214,14 @@
 
                 <li class="dropdown">
                     <div class="dropdown-toggle" onclick="toggleDropdown(this)">
-                            <span><i class="fas fa-list"></i> Danh sách các yêu cầu</span>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
+                        <span><i class="fas fa-list"></i> Danh sách các yêu cầu</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
                     <div class="dropdown-content">
                         <a href="Request/Request_List.jsp">Các yêu cầu xuất kho đã xử lý</a>
                         <a href="${pageContext.request.contextPath}/request-for-director">Các yêu cầu </a>
                     </div>
-                    
+
                 </li>
             </ul>
         </div>
