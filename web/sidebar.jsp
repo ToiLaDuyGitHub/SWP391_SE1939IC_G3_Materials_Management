@@ -1,4 +1,8 @@
-<%-- Document : sidebar Created on : Jun 3, 2025, 11:12:04 PM Author : ADMIN --%>
+<%-- 
+Document : sidebar 
+Created on : Jun 3, 2025, 11:12:04 
+PM Author : ADMIN 
+--%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -23,7 +27,6 @@
                     <i class="fas fa-user-circle"></i>
                     <div class="tooltip">
                         <p class="position">${sessionScope.userRole.roleName}</p>
-                        <p>${not empty sessionScope.user ? sessionScope.user.fullName : 'Chưa đăng nhập'}</p>
                     </div>
                 </div>
                 <form action="${pageContext.request.contextPath}/logout" method="post" style="display: inline;">
