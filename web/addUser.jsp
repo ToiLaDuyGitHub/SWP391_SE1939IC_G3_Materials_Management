@@ -133,66 +133,65 @@
             <div class="content" id="contentArea">
                 <div class="form-container" id="userAdd">
                     <h2><i class="fas fa-user-plus"></i> Thêm Người Dùng Mới</h2>
-                    
+
                     <% String error = (String) request.getAttribute("error"); %>
                     <% if (error != null) { %>
-                        <div class="alert alert-danger"><%= error %></div>
+                    <div class="alert alert-danger"><%= error %></div>
                     <% } %>
-                    
+
                     <% String message = (String) request.getAttribute("message"); %>
                     <% if (message != null) { %>
-                        <div class="alert alert-success"><%= message %></div>
+                    <div class="alert alert-success"><%= message %></div>
                     <% } %>
-                    
+
                     <form action="<%= request.getContextPath() %>/add-user" method="post" id="addUserForm">
                         <input type="hidden" name="action" value="add">
-                        
+
                         <div class="form-row add-user">
                             <label for="username">Tên đăng nhập<span class="required">*</span>:</label>
                             <input type="text" id="username" name="username" 
                                    value="<%= request.getParameter("username") != null ? request.getParameter("username") : "" %>" 
                                    required placeholder="Nhập tên đăng nhập">
                         </div>
-                        
+
                         <div class="form-row add-user">
                             <label for="firstName">Họ:</label>
                             <input type="text" id="firstName" name="firstName" 
                                    value="<%= request.getParameter("firstName") != null ? request.getParameter("firstName") : "" %>" 
                                    placeholder="Nhập họ">
                         </div>
-                        
+
                         <div class="form-row add-user">
                             <label for="lastName">Tên:</label>
                             <input type="text" id="lastName" name="lastName" 
                                    value="<%= request.getParameter("lastName") != null ? request.getParameter("lastName") : "" %>" 
                                    placeholder="Nhập tên">
                         </div>
-                        
+
                         <div class="form-row add-user">
                             <label for="phoneNum">Số điện thoại:</label>
                             <input type="text" id="phoneNum" name="phoneNum" 
                                    value="<%= request.getParameter("phoneNum") != null ? request.getParameter("phoneNum") : "" %>" 
                                    placeholder="Nhập số điện thoại">
                         </div>
-                        
+
                         <div class="form-row add-user">
                             <label for="address">Địa chỉ:</label>
                             <input type="text" id="address" name="address" 
                                    value="<%= request.getParameter("address") != null ? request.getParameter("address") : "" %>" 
                                    placeholder="Nhập địa chỉ">
                         </div>
-                        
+
                         <div class="form-row add-user">
                             <label for="roleID">Vai trò<span class="required">*</span>:</label>
                             <select id="roleID" name="roleID" required>
                                 <option value="">-- Chọn vai trò --</option>
-                                <option value="1" <%= "1".equals(request.getParameter("roleID")) ? "selected" : "" %>>Quản lý kho</option>
                                 <option value="2" <%= "2".equals(request.getParameter("roleID")) ? "selected" : "" %>>Nhân viên kho</option>
                                 <option value="3" <%= "3".equals(request.getParameter("roleID")) ? "selected" : "" %>>Giám đốc công ty</option>
                                 <option value="4" <%= "4".equals(request.getParameter("roleID")) ? "selected" : "" %>>Nhân viên công ty</option>
                             </select>
                         </div>
-                        
+
                         <button type="submit">
                             <i class="fas fa-user-plus"></i> Thêm Người Dùng
                         </button>
@@ -203,22 +202,22 @@
 
         <script>
             // Form validation
-            document.getElementById('addUserForm').addEventListener('submit', function(e) {
+            document.getElementById('addUserForm').addEventListener('submit', function (e) {
                 const username = document.getElementById('username').value.trim();
                 const roleID = document.getElementById('roleID').value;
-                
+
                 if (!username) {
                     alert('Vui lòng nhập tên đăng nhập!');
                     e.preventDefault();
                     return;
                 }
-                
+
                 if (!roleID) {
                     alert('Vui lòng chọn vai trò!');
                     e.preventDefault();
                     return;
                 }
-                
+
                 // Phone validation (if provided)
                 const phone = document.getElementById('phoneNum').value.trim();
                 if (phone && !/^0[0-9]{9,10}$/.test(phone)) {

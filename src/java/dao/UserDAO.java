@@ -281,45 +281,44 @@ public class UserDAO {
     }
 
     public int insertUser(User u) {
-    // Kiểm tra tên column chính xác trong database
-    String sql = "INSERT INTO users (Username, PasswordHash, FirstName, LastName, PhoneNum, Address, RoleID, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-    
-    try (Connection conn = DBUtil.getConnection(); 
-         PreparedStatement stm = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-        
-        stm.setString(1, u.getUsername());
-        stm.setString(2, u.getPasswordHash()); // Đảm bảo password đã được hash
-        stm.setString(3, u.getFirstName());
-        stm.setString(4, u.getLastName());
-        stm.setString(5, u.getPhoneNum());
-        stm.setString(6, u.getAddress());
-        stm.setInt(7, u.getRoleID());
-        stm.setBoolean(8, true); // IsActive = true
-        
-        int affectedRows = stm.executeUpdate();
-        
-        if (affectedRows == 0) {
-            Logger.getLogger(UserDAO.class.getName()).log(Level.WARNING, "No rows affected when inserting user: " + u.getUsername());
-            return -1;
-        }
+        // Kiểm tra tên column chính xác trong database
+        String sql = "INSERT INTO users (Username, PasswordHash, FirstName, LastName, PhoneNum, Address, RoleID, IsActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (ResultSet rs = stm.getGeneratedKeys()) {
-            if (rs.next()) {
-                int generatedId = rs.getInt(1);
-                Logger.getLogger(UserDAO.class.getName()).log(Level.INFO, "Successfully inserted user: " + u.getUsername() + " with ID: " + generatedId);
-                return generatedId;
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement stm = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            stm.setString(1, u.getUsername());
+            stm.setString(2, u.getPasswordHash()); // Đảm bảo password đã được hash
+            stm.setString(3, u.getFirstName());
+            stm.setString(4, u.getLastName());
+            stm.setString(5, u.getPhoneNum());
+            stm.setString(6, u.getAddress());
+            stm.setInt(7, u.getRoleID());
+            stm.setBoolean(8, true); // IsActive = true
+
+            int affectedRows = stm.executeUpdate();
+
+            if (affectedRows == 0) {
+                Logger.getLogger(UserDAO.class.getName()).log(Level.WARNING, "No rows affected when inserting user: " + u.getUsername());
+                return -1;
             }
+
+            try (ResultSet rs = stm.getGeneratedKeys()) {
+                if (rs.next()) {
+                    int generatedId = rs.getInt(1);
+                    Logger.getLogger(UserDAO.class.getName()).log(Level.INFO, "Successfully inserted user: " + u.getUsername() + " with ID: " + generatedId);
+                    return generatedId;
+                }
+            }
+
+        } catch (SQLException ex) {
+            Logger.getLogger(UserDAO.class.getName()).log(Level.SEVERE, "Error inserting user: " + u.getUsername(), ex);
+            // In ra chi tiết lỗi để debug
+            System.err.println("SQL Error Code: " + ex.getErrorCode());
+            System.err.println("SQL State: " + ex.getSQLState());
+            System.err.println("Error Message: " + ex.getMessage());
         }
-        
-    } catch (SQLException ex) {
-        Logger.getLogger(UserDAO.class.getName()).log(Level.SEVERE, "Error inserting user: " + u.getUsername(), ex);
-        // In ra chi tiết lỗi để debug
-        System.err.println("SQL Error Code: " + ex.getErrorCode());
-        System.err.println("SQL State: " + ex.getSQLState());
-        System.err.println("Error Message: " + ex.getMessage());
+        return -1;
     }
-    return -1;
-}
 
     public User getUserById(int userId) {
         String sql = "SELECT * FROM users WHERE UserID = ?";
@@ -409,7 +408,8 @@ public class UserDAO {
     public List<User_Role> getAllUsersWithRoles() {
         List<User_Role> users = new ArrayList<>();
         String sql = "SELECT u.UserID, u.Username, u.FirstName, u.LastName, u.PhoneNum, u.RoleID, r.RoleName, u.IsActive "
-                + "FROM users u JOIN roles r ON u.RoleID = r.RoleID";
+                + "FROM users u JOIN roles r ON u.RoleID = r.RoleID "
+                + "WHERE r.RoleName != 'Quản lý kho'";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement stm = conn.prepareStatement(sql); ResultSet rs = stm.executeQuery()) {
             while (rs.next()) {
                 User_Role ur = new User_Role(
@@ -434,10 +434,10 @@ public class UserDAO {
     public List<User_Role> getFilteredUsersWithRoles(String keywords, String roleFilter, String statusFilter, int page, int pageSize) {
         List<User_Role> users = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-            "SELECT u.UserID, u.Username, u.FirstName, u.LastName, u.PhoneNum, u.RoleID, r.RoleName, u.IsActive " +
-            "FROM users u JOIN roles r ON u.RoleID = r.RoleID WHERE 1=1"
-        );
+                "SELECT u.UserID, u.Username, u.FirstName, u.LastName, u.PhoneNum, u.RoleID, r.RoleName, u.IsActive "
+                + "FROM users u JOIN roles r ON u.RoleID = r.RoleID WHERE r.RoleName != 'Quản lý kho'");
         List<Object> params = new ArrayList<>();
+
         if (keywords != null && !keywords.trim().isEmpty()) {
             sql.append(" AND (u.FirstName LIKE ? OR u.LastName LIKE ? OR CONCAT(u.FirstName, ' ', u.LastName) LIKE ?)");
             String keywordPattern = "%" + keywords.trim() + "%";
@@ -466,22 +466,22 @@ public class UserDAO {
         sql.append(" LIMIT ? OFFSET ?");
         params.add(pageSize);
         params.add(offset);
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stm = conn.prepareStatement(sql.toString())) {
+
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement stm = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
                 stm.setObject(i + 1, params.get(i));
             }
             try (ResultSet rs = stm.executeQuery()) {
                 while (rs.next()) {
                     User_Role ur = new User_Role(
-                        rs.getInt("UserID"),
-                        rs.getString("Username"),
-                        rs.getString("FirstName"),
-                        rs.getString("LastName"),
-                        rs.getString("PhoneNum"),
-                        rs.getInt("RoleID"),
-                        rs.getString("RoleName"),
-                        rs.getBoolean("IsActive")
+                            rs.getInt("UserID"),
+                            rs.getString("Username"),
+                            rs.getString("FirstName"),
+                            rs.getString("LastName"),
+                            rs.getString("PhoneNum"),
+                            rs.getInt("RoleID"),
+                            rs.getString("RoleName"),
+                            rs.getBoolean("IsActive")
                     );
                     users.add(ur);
                 }
@@ -505,7 +505,8 @@ public class UserDAO {
 
     public User_Role getUserByIdWithRole(int userId) {
         String sql = "SELECT u.UserID, u.Username, u.FirstName, u.LastName, u.PhoneNum, u.Address, r.RoleName, u.IsActive "
-                + "FROM users u JOIN roles r ON u.RoleID = r.RoleID WHERE u.UserID = ?";
+                + "FROM users u JOIN roles r ON u.RoleID = r.RoleID "
+                + "WHERE u.UserID = ? AND r.RoleName != 'Quản lý kho'";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement stm = conn.prepareStatement(sql)) {
             stm.setInt(1, userId);
             try (ResultSet rs = stm.executeQuery()) {
@@ -527,9 +528,11 @@ public class UserDAO {
         }
         return null;
     }
-   public int getFilteredUsersCount(String keywords, String roleFilter, String statusFilter) {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users u JOIN roles r ON u.RoleID = r.RoleID WHERE 1=1");
+
+    public int getFilteredUsersCount(String keywords, String roleFilter, String statusFilter) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users u JOIN roles r ON u.RoleID = r.RoleID WHERE r.RoleName != 'Quản lý kho'");
         List<Object> params = new ArrayList<>();
+
         if (keywords != null && !keywords.trim().isEmpty()) {
             sql.append(" AND (u.FirstName LIKE ? OR u.LastName LIKE ? OR CONCAT(u.FirstName, ' ', u.LastName) LIKE ?)");
             String keywordPattern = "%" + keywords.trim() + "%";
@@ -554,8 +557,8 @@ public class UserDAO {
                 Logger.getLogger(UserDAO.class.getName()).log(Level.WARNING, "Invalid statusFilter: " + statusFilter);
             }
         }
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stm = conn.prepareStatement(sql.toString())) {
+
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement stm = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
                 stm.setObject(i + 1, params.get(i));
             }
@@ -569,20 +572,34 @@ public class UserDAO {
         }
         return 0;
     }
-   public boolean isUsernameExists(String username) {
-    String sql = "SELECT COUNT(*) FROM users WHERE Username = ?";
-    try (Connection conn = DBUtil.getConnection(); 
-         PreparedStatement stm = conn.prepareStatement(sql)) {
-        stm.setString(1, username);
-        try (ResultSet rs = stm.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
-        }
-    } catch (SQLException ex) {
-        Logger.getLogger(UserDAO.class.getName()).log(Level.SEVERE, "Error checking username exists: " + username, ex);
-    }
-    return false;
-}
 
+    public boolean isUsernameExists(String username) {
+        String sql = "SELECT COUNT(*) FROM users WHERE Username = ?";
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement stm = conn.prepareStatement(sql)) {
+            stm.setString(1, username);
+            try (ResultSet rs = stm.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(UserDAO.class.getName()).log(Level.SEVERE, "Error checking username exists: " + username, ex);
+        }
+        return false;
+    }
+
+    //Edit by Bui Hieu
+    public boolean isDirectorExists() {
+        String sql = "SELECT COUNT(*) FROM users WHERE RoleID = 3 AND IsActive = true";
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement stm = conn.prepareStatement(sql)) {
+            try (ResultSet rs = stm.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(UserDAO.class.getName()).log(Level.SEVERE, "Error checking director exists", ex);
+        }
+        return false;
+    }
 }

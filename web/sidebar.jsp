@@ -286,11 +286,11 @@ PM Author : ADMIN
                         </div>
                         <div class="dropdown-content">
                             <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
-                                <c:if test="${feature.url == '/purchase-request'}">
-                                    <a href="${pageContext.request.contextPath}/purchase-request">Yêu cầu mua mới vật tư</a>
+                                <c:if test="${feature.url == '/procurement-request'}">
+                                    <a href="${pageContext.request.contextPath}/procurement-request">Yêu cầu mua mới vật tư</a>
                                 </c:if>
                                 <c:if test="${feature.url == '/repair-request'}">
-                                    <a href="${pageContext.request.contextPath}/repair-request">Yêu cầu mua sửa chữa vật tư</a>
+                                    <a href="${pageContext.request.contextPath}/repair-request">Yêu cầu sửa chữa vật tư</a>
                                 </c:if>
                             </c:forEach>
                         </div>
