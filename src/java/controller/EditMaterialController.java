@@ -27,7 +27,7 @@ import java.nio.file.Paths;
         maxFileSize = 1024 * 1024 * 10, // 10MB
         maxRequestSize = 1024 * 1024 * 50)   // 50MB
 public class EditMaterialController extends HttpServlet {
-
+    
     private static final String UPLOAD_DIR = "uploads";
 
     /**
@@ -103,7 +103,6 @@ public class EditMaterialController extends HttpServlet {
             // Sau khi cập nhật thành công, lấy lại thông tin vật tư đã cập nhật để hiển thị
             request.getSession().setAttribute("successMessage", "Cập nhật vật tư thành công!");
             response.sendRedirect(request.getContextPath() + "/manage-material");
-
         } catch (SQLException e) {
             e.printStackTrace();
             request.setAttribute("errorMessage", "Lỗi khi cập nhật vật tư: " + e.getMessage());
