@@ -376,20 +376,20 @@
         </div>
         <script src="<%= request.getContextPath() %>/js/script.js"></script>
         <script>
-                             window.onload = function () {
-                                 console.log("allUser exists: ", <%= request.getAttribute("allUser") != null %>);
-                                 console.log("detailUser exists: ", <%= request.getAttribute("detailUser") != null %>);
-                                 if (<%= request.getAttribute("detailUser") != null %>) {
-                                     document.getElementById('userList').style.display = 'none';
-                                     document.getElementById('userDetail').style.display = 'block';
-                                 } else if (<%= request.getAttribute("allUser") != null %>) {
-                                     document.getElementById('userList').style.display = 'block';
-                                     document.getElementById('userDetail').style.display = 'none';
-                                 } else {
-                                     document.getElementById('userList').style.display = 'block';
-                                     document.getElementById('userDetail').style.display = 'none';
-                                 }
-                             }
+                            window.onload = function () {
+                                console.log("allUser exists: ", <%= request.getAttribute("allUser") != null %>);
+                                console.log("detailUser exists: ", <%= request.getAttribute("detailUser") != null %>);
+                                if (<%= request.getAttribute("detailUser") != null %>) {
+                                    document.getElementById('userList').style.display = 'none';
+                                    document.getElementById('userDetail').style.display = 'block';
+                                } else if (<%= request.getAttribute("allUser") != null %>) {
+                                    document.getElementById('userList').style.display = 'block';
+                                    document.getElementById('userDetail').style.display = 'none';
+                                } else {
+                                    document.getElementById('userList').style.display = 'block';
+                                    document.getElementById('userDetail').style.display = 'none';
+                                }
+                            }
         </script>
     </body> 
 </html>

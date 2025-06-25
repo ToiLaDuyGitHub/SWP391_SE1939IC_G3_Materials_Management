@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import model.PurchaseRequest;
@@ -123,4 +124,22 @@ public class PurchaseRequestDAO {
             e.printStackTrace();
         }
     }
+    // edit by Bui Hieu
+    public int createPurchaseRequest(PurchaseRequest pr) throws SQLException {
+        String sql = "INSERT INTO purchaserequests (CreatedByID, Note, Status) VALUES (?, ?, ?)";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setInt(1, pr.getCreatedByID());
+            stmt.setString(2, pr.getNote());
+            stmt.setByte(3, pr.getStatus());
+            stmt.executeUpdate();
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1); // Trả về ID của yêu cầu vừa tạo
+                } else {
+                    throw new SQLException("Không thể lấy ID được tạo.");
+                }
+            }
+        }
+}
 }

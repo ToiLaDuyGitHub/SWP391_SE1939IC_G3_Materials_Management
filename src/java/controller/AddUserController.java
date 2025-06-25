@@ -70,7 +70,11 @@ public class AddUserController extends HttpServlet {
                     req.getRequestDispatcher(ERROR_URL).forward(req, resp);
                     return;
                 }
-
+                if (roleID == 3 && userDAO.isDirectorExists()) {
+                    req.setAttribute("error", "Đã tồn tại một Giám đốc công ty! Không thể thêm người dùng với vai trò này.");
+                    req.getRequestDispatcher(ERROR_URL).forward(req, resp);
+                    return;
+                }
                 // Kiểm tra username đã tồn tại chưa
                 if (userDAO.isUsernameExists(username.trim())) {
                     req.setAttribute("error", "Tên đăng nhập đã tồn tại!");

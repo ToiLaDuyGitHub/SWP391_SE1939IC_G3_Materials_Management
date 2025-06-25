@@ -8,6 +8,14 @@
         <servlet-name>AddUserController</servlet-name>
         <servlet-class>controller.AddUserController</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>RepairRequestController</servlet-name>
+        <servlet-class>controller.RepairRequestController</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>ProcurementRequestController</servlet-name>
+        <servlet-class>controller.ProcurementRequestController</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>ManageUserController</servlet-name>
         <url-pattern>/manage-user</url-pattern>
@@ -23,5 +31,13 @@
     <servlet-mapping>
         <servlet-name>DeleteMaterialController</servlet-name>
         <url-pattern>/delete-select-material</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>RepairRequestController</servlet-name>
+        <url-pattern>/repair-request</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ProcurementRequestController</servlet-name>
+        <url-pattern>/procurement-request</url-pattern>
     </servlet-mapping>
 </web-app>

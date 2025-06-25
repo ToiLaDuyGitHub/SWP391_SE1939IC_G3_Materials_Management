@@ -29,11 +29,9 @@ public class SubCategoryDAO extends DBUtil {
     public List<SubCategory> getAllSubcategories() {
         List<SubCategory> subcategories = new ArrayList<>();
         String sql = "SELECT SubcategoryID, CategoryID, SubcategoryName FROM subcategories";
-        
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            
+
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+
             while (rs.next()) {
                 subcategories.add(getFromResultSet(rs));
             }
@@ -46,13 +44,12 @@ public class SubCategoryDAO extends DBUtil {
     // Lấy subcategory theo ID
     public SubCategory getSubcategoryByID(int subcategoryID) {
         String sql = "SELECT SubcategoryID, CategoryID, SubcategoryName FROM subcategories WHERE SubcategoryID = ?";
-        
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, subcategoryID);
             ResultSet rs = stmt.executeQuery();
-            
+
             if (rs.next()) {
                 return getFromResultSet(rs);
             }
@@ -66,13 +63,12 @@ public class SubCategoryDAO extends DBUtil {
     public List<SubCategory> getSubcategoriesByCategoryID(int categoryID) {
         List<SubCategory> subcategories = new ArrayList<>();
         String sql = "SELECT SubcategoryID, CategoryID, SubcategoryName FROM subcategories WHERE CategoryID = ?";
-        
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, categoryID);
             ResultSet rs = stmt.executeQuery();
-            
+
             while (rs.next()) {
                 subcategories.add(getFromResultSet(rs));
             }
@@ -85,10 +81,9 @@ public class SubCategoryDAO extends DBUtil {
     // Thêm subcategory mới
     public boolean insertSubcategory(SubCategory subcategory) {
         String sql = "INSERT INTO subcategories (CategoryID, SubcategoryName) VALUES (?, ?)";
-        
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, subcategory.getCategoryID());
             stmt.setString(2, subcategory.getSubcategoryName());
             int rowsAffected = stmt.executeUpdate();
@@ -102,10 +97,9 @@ public class SubCategoryDAO extends DBUtil {
     // Cập nhật subcategory
     public boolean updateSubcategory(SubCategory subcategory) {
         String sql = "UPDATE subcategories SET CategoryID = ?, SubcategoryName = ? WHERE SubcategoryID = ?";
-        
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, subcategory.getCategoryID());
             stmt.setString(2, subcategory.getSubcategoryName());
             stmt.setInt(3, subcategory.getSubcategoryID());
@@ -120,10 +114,9 @@ public class SubCategoryDAO extends DBUtil {
     // Xóa subcategory
     public boolean deleteSubcategory(int subcategoryID) {
         String sql = "DELETE FROM subcategories WHERE SubcategoryID = ?";
-        
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, subcategoryID);
             int rowsAffected = stmt.executeUpdate();
             return rowsAffected > 0;
@@ -136,10 +129,9 @@ public class SubCategoryDAO extends DBUtil {
     // Xóa tất cả subcategories của một category
     public boolean deleteSubcategoriesByCategoryID(int categoryID) {
         String sql = "DELETE FROM subcategories WHERE CategoryID = ?";
-        
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, categoryID);
             int rowsAffected = stmt.executeUpdate();
             return rowsAffected > 0;
@@ -152,13 +144,12 @@ public class SubCategoryDAO extends DBUtil {
     // Kiểm tra subcategory có tồn tại không
     public boolean subcategoryExists(int subcategoryID) {
         String sql = "SELECT COUNT(*) FROM subcategories WHERE SubcategoryID = ?";
-        
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, subcategoryID);
             ResultSet rs = stmt.executeQuery();
-            
+
             if (rs.next()) {
                 return rs.getInt(1) > 0;
             }
@@ -171,14 +162,13 @@ public class SubCategoryDAO extends DBUtil {
     // Kiểm tra tên subcategory đã tồn tại trong cùng category chưa
     public boolean subcategoryNameExistsInCategory(int categoryID, String subcategoryName) {
         String sql = "SELECT COUNT(*) FROM subcategories WHERE CategoryID = ? AND SubcategoryName = ?";
-        
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, categoryID);
             stmt.setString(2, subcategoryName);
             ResultSet rs = stmt.executeQuery();
-            
+
             if (rs.next()) {
                 return rs.getInt(1) > 0;
             }
@@ -191,11 +181,9 @@ public class SubCategoryDAO extends DBUtil {
     // Lấy tổng số subcategories
     public int getTotalSubcategories() {
         String sql = "SELECT COUNT(*) FROM subcategories";
-        
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            
+
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+
             if (rs.next()) {
                 return rs.getInt(1);
             }
@@ -208,13 +196,12 @@ public class SubCategoryDAO extends DBUtil {
     // Lấy số lượng subcategories theo CategoryID
     public int getSubcategoryCountByCategoryID(int categoryID) {
         String sql = "SELECT COUNT(*) FROM subcategories WHERE CategoryID = ?";
-        
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, categoryID);
             ResultSet rs = stmt.executeQuery();
-            
+
             if (rs.next()) {
                 return rs.getInt(1);
             }
@@ -228,13 +215,12 @@ public class SubCategoryDAO extends DBUtil {
     public List<SubCategory> searchSubcategoriesByName(String searchTerm) {
         List<SubCategory> subcategories = new ArrayList<>();
         String sql = "SELECT SubcategoryID, CategoryID, SubcategoryName FROM subcategories WHERE SubcategoryName LIKE ?";
-        
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setString(1, "%" + searchTerm + "%");
             ResultSet rs = stmt.executeQuery();
-            
+
             while (rs.next()) {
                 subcategories.add(getFromResultSet(rs));
             }
@@ -247,24 +233,22 @@ public class SubCategoryDAO extends DBUtil {
     // Lấy subcategories với thông tin category (JOIN)
     public List<Object[]> getSubcategoriesWithCategoryInfo() {
         List<Object[]> results = new ArrayList<>();
-        String sql = "SELECT s.SubcategoryID, s.CategoryID, s.SubcategoryName, c.CategoryName " +
-                    "FROM subcategories s " +
-                    "INNER JOIN categories c ON s.CategoryID = c.CategoryID " +
-                    "ORDER BY c.CategoryName, s.SubcategoryName";
-        
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            
+        String sql = "SELECT s.SubcategoryID, s.CategoryID, s.SubcategoryName, c.CategoryName "
+                + "FROM subcategories s "
+                + "INNER JOIN categories c ON s.CategoryID = c.CategoryID "
+                + "ORDER BY c.CategoryName, s.SubcategoryName";
+
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+
             while (rs.next()) {
                 SubCategory subcategory = new SubCategory(
-                    rs.getInt("SubcategoryID"),
-                    rs.getInt("CategoryID"),
-                    rs.getString("SubcategoryName")
+                        rs.getInt("SubcategoryID"),
+                        rs.getInt("CategoryID"),
+                        rs.getString("SubcategoryName")
                 );
                 Category category = new Category(
-                    rs.getInt("CategoryID"),
-                    rs.getString("CategoryName")
+                        rs.getInt("CategoryID"),
+                        rs.getString("CategoryName")
                 );
                 results.add(new Object[]{subcategory, category});
             }
@@ -278,14 +262,13 @@ public class SubCategoryDAO extends DBUtil {
     public List<SubCategory> getSubcategoriesWithPagination(int offset, int limit) {
         List<SubCategory> subcategories = new ArrayList<>();
         String sql = "SELECT SubcategoryID, CategoryID, SubcategoryName FROM subcategories LIMIT ? OFFSET ?";
-        
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, limit);
             stmt.setInt(2, offset);
             ResultSet rs = stmt.executeQuery();
-            
+
             while (rs.next()) {
                 subcategories.add(getFromResultSet(rs));
             }
@@ -317,7 +300,7 @@ public class SubCategoryDAO extends DBUtil {
             categoryDAO.insertCategory(testCategory);
             categories = categoryDAO.getAllCategories();
         }
-        
+
         for (Category category : categories) {
             System.out.println("Category ID: " + category.getCategoryID() + " - Name: " + category.getCategoryName());
         }
@@ -339,7 +322,7 @@ public class SubCategoryDAO extends DBUtil {
         System.out.println("4. Thêm subcategories mới:");
         if (!categories.isEmpty()) {
             int testCategoryID = categories.get(0).getCategoryID();
-            
+
             SubCategory newSub1 = new SubCategory(testCategoryID, "Laptop");
             SubCategory newSub2 = new SubCategory(testCategoryID, "Desktop");
             SubCategory newSub3 = new SubCategory(testCategoryID, "Monitor");
@@ -390,11 +373,11 @@ public class SubCategoryDAO extends DBUtil {
         allSubcategories = subcategoryDAO.getAllSubcategories();
         if (!allSubcategories.isEmpty()) {
             SubCategory testSub = allSubcategories.get(0);
-            System.out.println("Subcategory ID " + testSub.getSubcategoryID() + " tồn tại: " + 
-                             subcategoryDAO.subcategoryExists(testSub.getSubcategoryID()));
-            System.out.println("Tên '" + testSub.getSubcategoryName() + "' tồn tại trong category " + 
-                             testSub.getCategoryID() + ": " + 
-                             subcategoryDAO.subcategoryNameExistsInCategory(testSub.getCategoryID(), testSub.getSubcategoryName()));
+            System.out.println("Subcategory ID " + testSub.getSubcategoryID() + " tồn tại: "
+                    + subcategoryDAO.subcategoryExists(testSub.getSubcategoryID()));
+            System.out.println("Tên '" + testSub.getSubcategoryName() + "' tồn tại trong category "
+                    + testSub.getCategoryID() + ": "
+                    + subcategoryDAO.subcategoryNameExistsInCategory(testSub.getCategoryID(), testSub.getSubcategoryName()));
         }
         System.out.println();
 
@@ -405,10 +388,10 @@ public class SubCategoryDAO extends DBUtil {
             SubCategory subcategoryToUpdate = allSubcategories.get(0);
             String oldName = subcategoryToUpdate.getSubcategoryName();
             subcategoryToUpdate.setSubcategoryName(oldName + " (Updated)");
-            
+
             boolean updateResult = subcategoryDAO.updateSubcategory(subcategoryToUpdate);
-            System.out.println("Cập nhật subcategory ID " + subcategoryToUpdate.getSubcategoryID() + ": " + 
-                             (updateResult ? "Thành công" : "Thất bại"));
+            System.out.println("Cập nhật subcategory ID " + subcategoryToUpdate.getSubcategoryID() + ": "
+                    + (updateResult ? "Thành công" : "Thất bại"));
         }
         System.out.println();
 
@@ -418,10 +401,10 @@ public class SubCategoryDAO extends DBUtil {
         if (!allSubcategories.isEmpty()) {
             SubCategory subcategoryToDelete = allSubcategories.get(allSubcategories.size() - 1);
             int deleteID = subcategoryToDelete.getSubcategoryID();
-            
+
             boolean deleteResult = subcategoryDAO.deleteSubcategory(deleteID);
-            System.out.println("Xóa subcategory ID " + deleteID + ": " + 
-                             (deleteResult ? "Thành công" : "Thất bại"));
+            System.out.println("Xóa subcategory ID " + deleteID + ": "
+                    + (deleteResult ? "Thành công" : "Thất bại"));
         }
         System.out.println();
 
@@ -429,7 +412,7 @@ public class SubCategoryDAO extends DBUtil {
         System.out.println("11. Kết quả cuối:");
         totalSubcategories = subcategoryDAO.getTotalSubcategories();
         System.out.println("Tổng số subcategories cuối: " + totalSubcategories);
-        
+
         allSubcategories = subcategoryDAO.getAllSubcategories();
         System.out.println("Danh sách subcategories cuối:");
         for (SubCategory subcategory : allSubcategories) {
@@ -458,4 +441,38 @@ public class SubCategoryDAO extends DBUtil {
         }
         return subCategories;
     }
-} 
+    // edit by Bui Hieu
+    public List<SubCategory> getAllSubcategoriesforfillter() {
+        List<SubCategory> subcategories = new ArrayList<>();
+        String sql = "SELECT SubcategoryID, CategoryID, SubcategoryName FROM subcategories";
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                SubCategory subcategory = new SubCategory();
+                subcategory.setSubcategoryID(rs.getInt("SubcategoryID"));
+                subcategory.setCategoryID(rs.getInt("CategoryID"));
+                subcategory.setSubcategoryName(rs.getString("SubcategoryName"));
+                subcategories.add(subcategory);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return subcategories;
+    }
+
+    public List<SubCategory> getSubcategoriesByCategory(String categoryId) {
+        List<SubCategory> subcategories = new ArrayList<>();
+        String sql = "SELECT * FROM SubCategory WHERE categoryID = ?";
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+                  while (rs.next()) {
+                    SubCategory subcategory = new SubCategory();
+                    subcategory.setSubcategoryID(rs.getInt("subcategoryID"));
+                    subcategory.setSubcategoryName(rs.getString("subcategoryName"));
+                    subcategory.setCategoryID(rs.getInt("categoryID"));
+                    subcategories.add(subcategory);
+                }
+            }catch (SQLException e) {
+        e.printStackTrace();
+    }
+            return subcategories;
+        }
+    }

@@ -20,6 +20,7 @@ import util.DBUtil;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import model.dto.SearchMaterialDTO;
 
 /**
  *
@@ -521,49 +522,49 @@ public class MaterialDAO {
         PreparedStatement stmtUpdate = null;
         PreparedStatement stmtInsert = null;
         ResultSet rs = null;
-        
+
         try {
             conn = DBUtil.getConnection();
             conn.setAutoCommit(false); // Bắt đầu transaction
-            
+
             // 1. Tạo bản ghi trong importhistory
             String insertHistorySQL = "INSERT INTO importhistory (ImportedByID) VALUES (?)";
             stmtHistory = conn.prepareStatement(insertHistorySQL, Statement.RETURN_GENERATED_KEYS);
             stmtHistory.setInt(1, userID);
             stmtHistory.executeUpdate();
-            
+
             // Lấy ID của bản ghi vừa tạo
             rs = stmtHistory.getGeneratedKeys();
             int importHistoryID = 0;
             if (rs.next()) {
                 importHistoryID = rs.getInt(1);
             }
-            
+
             // 2. Chuẩn bị batch cho cập nhật số lượng
             String updateQuantitySQL = "UPDATE materialquantities SET "
                     + "UsableQuantity = UsableQuantity + ?, "
                     + "BrokenQuantity = BrokenQuantity + ? "
                     + "WHERE MaterialID = ?";
             stmtUpdate = conn.prepareStatement(updateQuantitySQL);
-            
+
             // 3. Chuẩn bị batch cho chèn lịch sử chi tiết
             String insertHistoryMaterialsSQL = "INSERT INTO importhistorymaterials "
                     + "(ImportHistoryID, MaterialID, UsableQuantity, BrokenQuantity) "
                     + "VALUES (?, ?, ?, ?)";
             stmtInsert = conn.prepareStatement(insertHistoryMaterialsSQL);
-            
+
             // Thêm các bản ghi vào batch
             for (Map<String, Integer> material : materials) {
                 int materialID = material.get("materialId");
                 int usableQuantity = material.get("usableQuantity");
                 int brokenQuantity = material.get("brokenQuantity");
-                
+
                 // Batch cho cập nhật số lượng
                 stmtUpdate.setInt(1, usableQuantity);
                 stmtUpdate.setInt(2, brokenQuantity);
                 stmtUpdate.setInt(3, materialID);
                 stmtUpdate.addBatch();
-                
+
                 // Batch cho chèn lịch sử
                 stmtInsert.setInt(1, importHistoryID);
                 stmtInsert.setInt(2, materialID);
@@ -571,13 +572,13 @@ public class MaterialDAO {
                 stmtInsert.setInt(4, brokenQuantity);
                 stmtInsert.addBatch();
             }
-            
+
             // Thực thi batch
             stmtUpdate.executeBatch();
             stmtInsert.executeBatch();
-            
+
             conn.commit(); // Commit transaction
-            
+
         } catch (SQLException e) {
             if (conn != null) {
                 try {
@@ -605,25 +606,25 @@ public class MaterialDAO {
         PreparedStatement stmtUpdate = null;
         PreparedStatement stmtInsert = null;
         ResultSet rs = null;
-        
+
         try {
             conn = DBUtil.getConnection();
             conn.setAutoCommit(false); // Bắt đầu transaction
-            
+
             // 1. Tạo bản ghi trong importhistory
             String insertHistorySQL = "INSERT INTO importhistory (ImportedByID, PurchaseRequestID) VALUES (?, ?)";
             stmtHistory = conn.prepareStatement(insertHistorySQL, Statement.RETURN_GENERATED_KEYS);
             stmtHistory.setInt(1, userID);
             stmtHistory.setInt(2, purchaseRequestID);
             stmtHistory.executeUpdate();
-            
+
             // Lấy ID của bản ghi vừa tạo
             rs = stmtHistory.getGeneratedKeys();
             int importHistoryID = 0;
             if (rs.next()) {
                 importHistoryID = rs.getInt(1);
             }
-            
+
             // 2. Chuẩn bị batch cho cập nhật số lượng
             String updateQuantitySQL = "UPDATE materialquantities SET " +
                     "UsableQuantity = UsableQuantity + ?, " +
@@ -631,27 +632,27 @@ public class MaterialDAO {
                     "TotalQuantity = TotalQuantity + ? " +
                     "WHERE MaterialID = ?";
             stmtUpdate = conn.prepareStatement(updateQuantitySQL);
-            
+
             // 3. Chuẩn bị batch cho chèn lịch sử chi tiết
             String insertHistoryMaterialsSQL = "INSERT INTO importhistorymaterials " +
                     "(ImportHistoryID, MaterialID, UsableQuantity, BrokenQuantity) " +
                     "VALUES (?, ?, ?, ?)";
             stmtInsert = conn.prepareStatement(insertHistoryMaterialsSQL);
-            
+
             // Thêm các bản ghi vào batch
             for (Map<String, Integer> material : materials) {
                 int materialID = material.get("materialId");
                 int usableQuantity = material.get("usableQuantity");
                 int brokenQuantity = material.get("brokenQuantity");
                 int totalQuantity = usableQuantity + brokenQuantity; // Tính tổng số lượng
-                
+
                 // Batch cho cập nhật số lượng
                 stmtUpdate.setInt(1, usableQuantity);
                 stmtUpdate.setInt(2, brokenQuantity);
                 stmtUpdate.setInt(3, totalQuantity);
                 stmtUpdate.setInt(4, materialID);
                 stmtUpdate.addBatch();
-                
+
                 // Batch cho chèn lịch sử
                 stmtInsert.setInt(1, importHistoryID);
                 stmtInsert.setInt(2, materialID);
@@ -659,13 +660,13 @@ public class MaterialDAO {
                 stmtInsert.setInt(4, brokenQuantity);
                 stmtInsert.addBatch();
             }
-            
+
             // Thực thi batch
             stmtUpdate.executeBatch();
             stmtInsert.executeBatch();
-            
+
             conn.commit(); // Commit transaction
-            
+
         } catch (SQLException e) {
             if (conn != null) {
                 try {
@@ -686,7 +687,7 @@ public class MaterialDAO {
             }
         }
     }
-    
+
     public Material getMaterialById(int materialID) {
         String sql = "SELECT m.MaterialID, m.MaterialName, m.Image, m.Detail, " +
                      "c.CategoryID, c.CategoryName, " +
@@ -755,7 +756,7 @@ public class MaterialDAO {
         }
         return materials;
     }
-    
+
     // Phương thức lấy tất cả nhà cung cấp
     public List<Supplier> getAllSuppliers() {
         List<Supplier> suppliers = new ArrayList<>();
@@ -831,5 +832,71 @@ public class MaterialDAO {
             e.printStackTrace();
         }
         return list;
+    }
+   //edit by Bui Hieu
+    public List<SearchMaterialDTO> searchMaterialsForPurchase(String term, String category, String subcategory) {
+        List<SearchMaterialDTO> materials = new ArrayList<>();
+        String sql = "SELECT m.MaterialID, m.MaterialName, s.SupplierName, u.MinUnit "
+                + "FROM materials m "
+                + "LEFT JOIN suppliers s ON m.SupplierID = s.SupplierID "
+                + "LEFT JOIN units u ON m.MaterialID = u.MaterialID "
+                + "WHERE (m.MaterialName LIKE ? OR m.MaterialID LIKE ?) "
+                + "AND (m.CategoryID = ? OR ? IS NULL) "
+                + "AND (m.SubcategoryID = ? OR ? IS NULL)";
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            String searchTerm = "%" + (term != null ? term : "") + "%";
+            ps.setString(1, searchTerm);
+            ps.setString(2, searchTerm);
+            if (category != null && !category.isEmpty()) {
+                ps.setInt(3, Integer.parseInt(category));
+                ps.setInt(4, Integer.parseInt(category));
+            } else {
+                ps.setNull(3, java.sql.Types.INTEGER);
+                ps.setNull(4, java.sql.Types.INTEGER);
+            }
+            if (subcategory != null && !subcategory.isEmpty()) {
+                ps.setInt(5, Integer.parseInt(subcategory));
+                ps.setInt(6, Integer.parseInt(subcategory));
+            } else {
+                ps.setNull(5, java.sql.Types.INTEGER);
+                ps.setNull(6, java.sql.Types.INTEGER);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    SearchMaterialDTO material = new SearchMaterialDTO();
+                    material.setMaterialID(rs.getInt("MaterialID"));
+                    material.setMaterialName(rs.getString("MaterialName"));
+                    material.setSupplierName(rs.getString("SupplierName"));
+                    material.setUnit(rs.getString("MinUnit"));
+                    materials.add(material);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return materials;
+    }
+
+    public SearchMaterialDTO getMaterialByID(int materialID) throws SQLException {
+        String sql = "SELECT m.MaterialID, m.MaterialName, u.MinUnit, s.SupplierName "
+                + "FROM materials m "
+                + "JOIN suppliers s ON m.SupplierID = s.SupplierID "
+                + "LEFT JOIN units u ON m.MaterialID = u.MaterialID "
+                + "WHERE m.MaterialID = ?";
+
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, materialID);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    SearchMaterialDTO dto = new SearchMaterialDTO();
+                    dto.setMaterialID(rs.getInt("MaterialID"));
+                    dto.setMaterialName(rs.getString("MaterialName"));
+                    dto.setUnit(rs.getString("MinUnit"));
+                    dto.setSupplierName(rs.getString("SupplierName"));
+                    return dto;
+                }
+            }
+            return null;
+        }
     }
 }

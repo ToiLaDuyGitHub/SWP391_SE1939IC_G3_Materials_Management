@@ -45,4 +45,18 @@ public class PurchaseRequestMaterialsDAO {
     // create method getByPurchaseRequestId
     // initialize MaterialsDAO to get material name and quantity and unit 
     // have to join purchaserequestmaterials join purchaserequest join material join units
+    // edit by Bui Hieu
+    public void createPurchaseRequestMaterials(int purchaseRequestId, List<PurchaseRequestMaterials> materials) throws SQLException {
+        String sql = "INSERT INTO purchaserequestmaterials (PurchaseRequestID, MaterialID, Quantity) VALUES (?, ?, ?)";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            for (PurchaseRequestMaterials prm : materials) {
+                stmt.setInt(1, purchaseRequestId);
+                stmt.setInt(2, prm.getMaterialID());
+                stmt.setInt(3, prm.getQuantity());
+                stmt.addBatch();
+            }
+            stmt.executeBatch(); 
+        }
+    }
 }
