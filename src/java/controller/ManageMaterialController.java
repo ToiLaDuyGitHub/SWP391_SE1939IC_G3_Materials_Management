@@ -6,6 +6,7 @@ package controller;
 
 import dao.CategoryDAO;
 import dao.MaterialDAO;
+import dao.SubCategoryDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import model.Material;
+import model.SubCategory;
 
 /**
  *
@@ -41,9 +43,10 @@ public class ManageMaterialController extends HttpServlet {
         // Tạo đối tượng MaterialDAO
         MaterialDAO materialDAO = new MaterialDAO();
         CategoryDAO categoryDAO = new CategoryDAO();
+        SubCategoryDAO subCategoryDAO = new SubCategoryDAO();
         List<Material> list = null;
         List<Category> categoryList = new ArrayList<>();
-        
+        List<SubCategory> subcategoryList = new ArrayList<>();
         try {
             // Kiểm tra xem có tham số categoryID không
             String categoryIDParam = request.getParameter("categoryID");
@@ -65,9 +68,10 @@ public class ManageMaterialController extends HttpServlet {
             
             // Lấy danh sách tất cả các danh mục
             categoryList = categoryDAO.getAllCategories();
-            
+            subcategoryList = subCategoryDAO.getAllSubcategories();
             request.setAttribute("materials", list);
             request.setAttribute("categories", categoryList);
+            request.setAttribute("subcategoryList", subcategoryList);
             request.getRequestDispatcher("materialList.jsp").forward(request, response);
             
         } catch (Exception e) {

@@ -11,7 +11,6 @@
         <style>
             .content-card {
                 max-width: 1550px;
-
             }
             .edit-button {
                 background-color: #4CAF50;
@@ -29,7 +28,6 @@
                 height: 28px;
                 line-height: 22px;
             }
-
             .edit-button:hover {
                 background-color: #45a049;
             }
@@ -137,11 +135,9 @@
                 height: 28px;
                 line-height: 22px;
             }
-
             .cart-button:hover {
                 background-color: #f57c00;
             }
-
             .cart-button i {
                 margin-right: 3px;
                 vertical-align: middle;
@@ -169,7 +165,28 @@
                 margin-right: 3px;
                 vertical-align: middle;
             }
-            
+            .add-button {
+                padding: 12px 25px;
+                background: linear-gradient(90deg, #4CAF50, #66BB6A);
+                color: #fff;
+                border: none;
+                border-radius: 25px;
+                cursor: pointer;
+                font-size: 16px;
+                font-family: 'Poppins', sans-serif;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                transition: background 0.3s, transform 0.2s;
+                margin-left: 10px;
+            }
+            .add-button:hover {
+                background: linear-gradient(90deg, #66BB6A, #4CAF50);
+                transform: translateY(-2px);
+            }
+            .add-button i {
+                font-size: 16px;
+            }
             .modal {
                 max-width: 600px;
                 width: 90%;
@@ -224,7 +241,6 @@
                 margin-top: 10px;
                 max-height: 150px;
             }
-            
         </style>
     </head>
     <body>
@@ -253,6 +269,7 @@
                                 </c:forEach>
                             </select>
                             <button type="submit"><i class="fas fa-search"></i> Tìm kiếm</button>
+                            <a href="${pageContext.request.contextPath}/add-material" class="add-button"><i class="fas fa-plus"></i> Thêm mới</a>
                         </form>
                     </div>
                                 
@@ -405,18 +422,15 @@
         </div>
         <script src="<%= request.getContextPath() %>/js/script.js"></script>
         <script>
-            
             const contextPath = "<%= request.getContextPath() %>";
         </script>
         <script>
-                                document.addEventListener('DOMContentLoaded', function () {
-                                    const profileSection = document.getElementById('materialListSection');
-                                    if (profileSection) {
-                                        profileSection.classList.remove('hidden');
-                                    }
-                                });
-
-
+            document.addEventListener('DOMContentLoaded', function () {
+                const profileSection = document.getElementById('materialListSection');
+                if (profileSection) {
+                    profileSection.classList.remove('hidden');
+                }
+            });
         </script>
     </body>
 </html>
