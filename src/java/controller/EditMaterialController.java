@@ -67,40 +67,31 @@ public class EditMaterialController extends HttpServlet {
             throws ServletException, IOException {
         MaterialDAO materialDAO = new MaterialDAO();
         try {
-            // Lấy các tham số từ form trong JSP
+            // Lấy các tham số từ form
             int materialID = Integer.parseInt(request.getParameter("materialID"));
             String materialName = request.getParameter("materialName");
             int subcategoryID = Integer.parseInt(request.getParameter("subcategoryID"));
-            int usableQuantity = Integer.parseInt(request.getParameter("statusOld"));
-            int brokenQuantity = Integer.parseInt(request.getParameter("statusDamaged"));
-            int totalQuantity = usableQuantity + brokenQuantity;
-            String supplierName = request.getParameter("supplier");
-            String supplierAddress = request.getParameter("supplierAddress");
-            String supplierPhone = request.getParameter("supplierPhone");
-            String oldImageUrl = request.getParameter("imageUrl");
             String detail = request.getParameter("detail");
+            String oldImageUrl = request.getParameter("imageUrl");
+
             // Xử lý upload hình ảnh mới
-            String imageUrl = oldImageUrl; // Mặc định giữ URL hình ảnh cũ
-            Part filePart = request.getPart("image"); // Lấy file từ form
+            String imageUrl = oldImageUrl; // Giữ URL hình ảnh cũ nếu không có hình mới
+            Part filePart = request.getPart("image");
             if (filePart != null && filePart.getSize() > 0) {
-                // Lấy tên file
                 String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-                // Đường dẫn lưu trữ file trên server
                 String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIR;
                 File uploadDir = new File(uploadPath);
                 if (!uploadDir.exists()) {
-                    uploadDir.mkdir(); // Tạo thư mục nếu chưa tồn tại
+                    uploadDir.mkdir();
                 }
-                // Lưu file vào thư mục uploads
                 String filePath = uploadPath + File.separator + fileName;
                 filePart.write(filePath);
-                // Cập nhật imageUrl với đường dẫn mới
                 imageUrl = UPLOAD_DIR + "/" + fileName;
             }
 
-            // Gọi phương thức updateMaterial trong MaterialDAO để cập nhật thông tin vật tư vào cơ sở dữ liệu
-            materialDAO.updateMaterial(materialID, materialName, subcategoryID, supplierName, supplierAddress, supplierPhone, imageUrl, totalQuantity, usableQuantity, brokenQuantity, detail);
-            // Sau khi cập nhật thành công, lấy lại thông tin vật tư đã cập nhật để hiển thị
+            // Gọi phương thức updateMaterial
+            materialDAO.updateMaterial(materialID, materialName, subcategoryID, imageUrl, detail);
+
             request.getSession().setAttribute("successMessage", "Cập nhật vật tư thành công!");
             response.sendRedirect(request.getContextPath() + "/manage-material");
         } catch (SQLException e) {
@@ -108,7 +99,7 @@ public class EditMaterialController extends HttpServlet {
             request.setAttribute("errorMessage", "Lỗi khi cập nhật vật tư: " + e.getMessage());
             request.getRequestDispatcher("/manage-material").forward(request, response);
         } catch (NumberFormatException e) {
-            request.setAttribute("errorMessage", "Vui lòng nhập đúng định dạng số cho các trường số lượng!");
+            request.setAttribute("errorMessage", "Vui lòng nhập đúng định dạng số cho các trường số!");
             request.getRequestDispatcher("/manage-material").forward(request, response);
         }
     }

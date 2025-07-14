@@ -45,7 +45,6 @@ public class AddMaterialController extends HttpServlet {
      * @throws IOException if an I/O error occurs
      */
     @Override
-
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
@@ -58,6 +57,9 @@ public class AddMaterialController extends HttpServlet {
             request.setAttribute("unitsList", unitsList);
             request.getRequestDispatcher("addMaterial.jsp").forward(request, response);
         } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Lỗi khi tải dữ liệu: " + e.getMessage());
+            request.getRequestDispatcher("addMaterial.jsp").forward(request, response);
         }
     }
 
@@ -72,24 +74,17 @@ public class AddMaterialController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        MaterialDAO materialDAO = new MaterialDAO();
+      MaterialDAO materialDAO = new MaterialDAO();
         try {
             // Lấy thông tin từ form
             String materialName = request.getParameter("MaterialName");
-            String supplierName = request.getParameter("SupplierName");
-            String address = request.getParameter("Address");
-            String phoneNum = request.getParameter("PhoneNum");
             String subcategoryIdStr = request.getParameter("SubcategoryID");
-            String usableQuantityStr = request.getParameter("UsableQuantity");
-             String unitMinUnit = request.getParameter("UnitID");
+            String unitMinUnit = request.getParameter("UnitID");
             String detail = request.getParameter("Detail");
 
-
             // Kiểm tra tham số
-            if (materialName == null || supplierName == null || address == null || phoneNum == null ||
-                subcategoryIdStr == null || usableQuantityStr == null || unitMinUnit == null ||
-                materialName.isEmpty() || supplierName.isEmpty() || address.isEmpty() || phoneNum.isEmpty() ||
-                subcategoryIdStr.isEmpty() || usableQuantityStr.isEmpty() || unitMinUnit.isEmpty()) {
+            if (materialName == null || subcategoryIdStr == null || unitMinUnit == null ||
+                materialName.isEmpty() || subcategoryIdStr.isEmpty() || unitMinUnit.isEmpty()) {
                 request.setAttribute("error", "Vui lòng điền đầy đủ thông tin.");
                 SubCategoryDAO subCategoryDAO = new SubCategoryDAO();
                 List<SubCategory> subcategoryList = subCategoryDAO.getAllSubCategories();
@@ -100,31 +95,50 @@ public class AddMaterialController extends HttpServlet {
                 return;
             }
 
-            int subcategoryId = Integer.parseInt(subcategoryIdStr);
-            int usableQuantity = Integer.parseInt(usableQuantityStr);
-            int unitId = materialDAO.getUnitIdFromMinUnit(unitMinUnit);
+            // Xác thực tên vật tư
+            if (materialName.length() < 2 || materialName.length() > 250) {
+                request.setAttribute("error", "Tên vật tư phải có 2-250 ký tự.");
+                SubCategoryDAO subCategoryDAO = new SubCategoryDAO();
+                List<SubCategory> subcategoryList = subCategoryDAO.getAllSubCategories();
+                List<Units> unitsList = materialDAO.getAllUnits();
+                request.setAttribute("subcategoryList", subcategoryList);
+                request.setAttribute("unitsList", unitsList);
+                request.getRequestDispatcher("addMaterial.jsp").forward(request, response);
+                return;
+            }
 
-            int totalQuantity = usableQuantity;
+            if (!materialName.matches("^[a-zA-Z0-9\\s\\p{L}]*$")) {
+                request.setAttribute("error", "Tên vật tư chứa ký tự đặc biệt.");
+                SubCategoryDAO subCategoryDAO = new SubCategoryDAO();
+                List<SubCategory> subcategoryList = subCategoryDAO.getAllSubCategories();
+                List<Units> unitsList = materialDAO.getAllUnits();
+                request.setAttribute("subcategoryList", subcategoryList);
+                request.setAttribute("unitsList", unitsList);
+                request.getRequestDispatcher("addMaterial.jsp").forward(request, response);
+                return;
+            }
+
+            int subcategoryId = Integer.parseInt(subcategoryIdStr);
+            int unitId = materialDAO.getUnitIdFromMinUnit(unitMinUnit);
 
             // Xử lý upload file ảnh
             Part filePart = request.getPart("Image");
             String imagePath = null;
             if (filePart != null && filePart.getSize() > 0) {
                 String fileName = filePart.getSubmittedFileName();
-                String uploadPath = getServletContext().getRealPath("") + "uploads";
+                String uploadPath = getServletContext().getRealPath("") + "Uploads";
                 java.io.File uploadDir = new java.io.File(uploadPath);
                 if (!uploadDir.exists()) {
                     uploadDir.mkdir();
                 }
-                imagePath = "uploads/" + fileName;
+                imagePath = "Uploads/" + fileName;
                 filePart.write(uploadPath + java.io.File.separator + fileName);
             }
 
             // Thêm vật tư mới vào cơ sở dữ liệu
-           materialDAO.addMaterial(materialName, subcategoryId, supplierName, address,
-                   phoneNum, imagePath, detail, totalQuantity, usableQuantity, unitId);
+            materialDAO.addMaterial(materialName, subcategoryId, imagePath, detail, unitId);
             // Thiết lập thông báo thành công và tải lại danh sách danh mục
-             request.setAttribute("successMessage", "Vật tư đã được thêm thành công!");
+            request.setAttribute("successMessage", "Vật tư đã được thêm thành công!");
             SubCategoryDAO subCategoryDAO = new SubCategoryDAO();
             List<SubCategory> subcategoryList = subCategoryDAO.getAllSubCategories();
             List<Units> unitList = materialDAO.getAllUnits();
@@ -137,11 +151,4 @@ public class AddMaterialController extends HttpServlet {
             request.getRequestDispatcher("addMaterial.jsp").forward(request, response);
         }
     }
-
 }
-
-/**
- * Returns a short description of the servlet.
- *
- * @return a String containing servlet description
- */

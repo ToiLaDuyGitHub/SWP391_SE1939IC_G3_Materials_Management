@@ -33,13 +33,11 @@ public class MaterialDAO {
         String sql = "SELECT m.MaterialID, m.MaterialName, m.Image, m.Detail, "
                 + "c.CategoryID, c.CategoryName, "
                 + "sc.SubcategoryID, sc.SubcategoryName, "
-                + "s.SupplierID, s.SupplierName, s.Address, s.PhoneNum, "
-                + "mq.UsableQuantity, mq.BrokenQuantity, mq.TotalQuantity "
+                + "u.MinUnit "
                 + "FROM materials m "
                 + "LEFT JOIN categories c ON m.CategoryID = c.CategoryID "
                 + "LEFT JOIN subcategories sc ON m.SubcategoryID = sc.SubcategoryID "
-                + "LEFT JOIN suppliers s ON m.SupplierID = s.SupplierID "
-                + "LEFT JOIN materialquantities mq ON m.MaterialID = mq.MaterialID";
+                + "LEFT JOIN units u ON m.MaterialID = u.MaterialID";
 
         try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             ResultSet rs = stmt.executeQuery();
@@ -49,16 +47,9 @@ public class MaterialDAO {
                 material.setMaterialName(rs.getString("MaterialName"));
                 material.setCategory(new Category(rs.getInt("CategoryID"), rs.getString("CategoryName")));
                 material.setSubcategory(new SubCategory(rs.getInt("SubcategoryID"), rs.getInt("CategoryID"), rs.getString("SubcategoryName")));
-                material.setSupplierID(new Supplier(rs.getInt("SupplierID"), rs.getString("SupplierName"), rs.getString("Address"), rs.getString("PhoneNum")));
                 material.setImage(rs.getString("Image"));
                 material.setDetail(rs.getString("Detail"));
-
-                MaterialQuantity quantity = new MaterialQuantity(
-                        rs.getInt("MaterialID"),
-                        rs.getInt("UsableQuantity"),
-                        rs.getInt("BrokenQuantity"),
-                        rs.getInt("TotalQuantity"));
-                material.setQuantity(quantity);
+                material.setMinUnit(rs.getString("MinUnit"));
                 list.add(material);
             }
         } catch (SQLException e) {
@@ -68,9 +59,7 @@ public class MaterialDAO {
     }
 
     // Thêm vật tư mới
-    public void addMaterial(String materialName, int subcategoryId, String supplierName,
-            String address, String phoneNum, String image, String detail,
-            int totalQuantity, int usableQuantity, int unitId) throws SQLException {
+    public void addMaterial(String materialName, int subcategoryId, String image, String detail, int unitId) throws SQLException {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -83,38 +72,23 @@ public class MaterialDAO {
             stmt = conn.prepareStatement(getCategorySQL);
             stmt.setInt(1, subcategoryId);
             rs = stmt.executeQuery();
-            int CategoryID = 0;
+            int categoryID = 0;
             if (rs.next()) {
-                CategoryID = rs.getInt("CategoryID");
+                categoryID = rs.getInt("CategoryID");
             } else {
                 throw new SQLException("Không tìm thấy danh mục con với SubcategoryID: " + subcategoryId);
             }
             rs.close();
             stmt.close();
 
-            String insertSupplierSQL = "INSERT INTO suppliers (SupplierName, Address, PhoneNum) VALUES (?, ?, ?)";
-            stmt = conn.prepareStatement(insertSupplierSQL, PreparedStatement.RETURN_GENERATED_KEYS);
-            stmt.setString(1, supplierName);
-            stmt.setString(2, address);
-            stmt.setString(3, phoneNum);
-            stmt.executeUpdate();
-            rs = stmt.getGeneratedKeys();
-            int supplierId = 0;
-            if (rs.next()) {
-                supplierId = rs.getInt(1);
-            }
-            rs.close();
-            stmt.close();
-
             // Thêm vật tư
-            String insertMaterialSQL = "INSERT INTO materials (MaterialName, CategoryID, SubcategoryID, SupplierID, Image, Detail) VALUES (?, ?, ?, ?, ?, ?)";
+            String insertMaterialSQL = "INSERT INTO materials (MaterialName, CategoryID, SubcategoryID, Image, Detail) VALUES (?, ?, ?, ?, ?)";
             stmt = conn.prepareStatement(insertMaterialSQL, PreparedStatement.RETURN_GENERATED_KEYS);
             stmt.setString(1, materialName);
-            stmt.setInt(2, CategoryID);
+            stmt.setInt(2, categoryID);
             stmt.setInt(3, subcategoryId);
-            stmt.setInt(4, supplierId);
-            stmt.setString(5, image);
-            stmt.setString(6, detail);
+            stmt.setString(4, image);
+            stmt.setString(5, detail);
             stmt.executeUpdate();
             rs = stmt.getGeneratedKeys();
             int materialId = 0;
@@ -123,14 +97,6 @@ public class MaterialDAO {
             }
             rs.close();
             stmt.close();
-
-            // Thêm số lượng vật tư
-            String insertQuantitySQL = "INSERT INTO materialquantities (MaterialID, UsableQuantity, BrokenQuantity) VALUES (?, ?, ?)";
-            stmt = conn.prepareStatement(insertQuantitySQL);
-            stmt.setInt(1, materialId);
-            stmt.setInt(2, usableQuantity);
-            stmt.setInt(3, 0); // BrokenQuantity mặc định là 0
-            stmt.executeUpdate();
 
             // Lấy MinUnit dựa trên unitId trước khi chèn
             String getMinUnitSQL = "SELECT MinUnit FROM units WHERE UnitID = ?";
@@ -209,13 +175,12 @@ public class MaterialDAO {
 
     // Tìm vật tư theo tên
     public Material getMaterialByName(String materialName) {
-        String sql = "SELECT m.*, c.CategoryName, sc.SubcategoryName, s.SupplierName, s.Address, s.PhoneNum, "
-                + "mq.UsableQuantity, mq.BrokenQuantity, mq.TotalQuantity "
+        String sql = "SELECT m.*, c.CategoryName, sc.SubcategoryName, "
+                + "u.MinUnit "
                 + "FROM materials m "
                 + "LEFT JOIN categories c ON m.CategoryID = c.CategoryID "
                 + "LEFT JOIN subcategories sc ON m.SubcategoryID = sc.SubcategoryID "
-                + "LEFT JOIN suppliers s ON m.SupplierID = s.SupplierID "
-                + "LEFT JOIN materialquantities mq ON m.MaterialID = mq.MaterialID "
+                + "LEFT JOIN units u ON m.MaterialID = u.MaterialID "
                 + "WHERE TRIM(LOWER(m.MaterialName)) = ?";
 
         try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -228,16 +193,9 @@ public class MaterialDAO {
                 material.setMaterialName(rs.getString("MaterialName"));
                 material.setCategory(new Category(rs.getInt("CategoryID"), rs.getString("CategoryName")));
                 material.setSubcategory(new SubCategory(rs.getInt("SubcategoryID"), rs.getInt("CategoryID"), rs.getString("SubcategoryName")));
-                material.setSupplierID(new Supplier(rs.getInt("SupplierID"), rs.getString("SupplierName"), rs.getString("Address"), rs.getString("PhoneNum")));
                 material.setImage(rs.getString("Image"));
                 material.setDetail(rs.getString("Detail"));
-
-                MaterialQuantity quantity = new MaterialQuantity(
-                        rs.getInt("MaterialID"),
-                        rs.getInt("UsableQuantity"),
-                        rs.getInt("BrokenQuantity"),
-                        rs.getInt("TotalQuantity"));
-                material.setQuantity(quantity);
+                material.setMinUnit(rs.getString("MinUnit"));
                 return material;
             }
         } catch (SQLException e) {
@@ -286,9 +244,7 @@ public class MaterialDAO {
     }
 
     // Cập nhật thông tin vật tư trong cơ sở dữ liệu
-    public void updateMaterial(int materialID, String materialName, int subcategoryID, String supplierName,
-            String supplierAddress, String supplierPhone, String imageUrl, int totalQuantity,
-            int usableQuantity, int brokenQuantity, String detail) throws SQLException {
+    public void updateMaterial(int materialID, String materialName, int subcategoryID, String imageUrl, String detail) throws SQLException {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -297,27 +253,12 @@ public class MaterialDAO {
             conn = DBUtil.getConnection();
             conn.setAutoCommit(false);
 
-            // 1. Lấy SupplierID và CategoryID hiện tại của vật tư
-            String getMaterialSQL = "SELECT SupplierID, CategoryID FROM materials WHERE MaterialID = ?";
-            stmt = conn.prepareStatement(getMaterialSQL);
-            stmt.setInt(1, materialID);
-            rs = stmt.executeQuery();
-            int supplierID = 0;
-            int categoryID = 0;
-            if (rs.next()) {
-                supplierID = rs.getInt("SupplierID");
-                categoryID = rs.getInt("CategoryID");
-            } else {
-                throw new SQLException("Không tìm thấy vật tư với MaterialID: " + materialID);
-            }
-            rs.close();
-            stmt.close();
-
-            // 2. Lấy CategoryID từ SubcategoryID (nếu subcategoryID thay đổi)
+            // Lấy CategoryID từ SubcategoryID
             String getCategorySQL = "SELECT CategoryID FROM subcategories WHERE SubcategoryID = ?";
             stmt = conn.prepareStatement(getCategorySQL);
             stmt.setInt(1, subcategoryID);
             rs = stmt.executeQuery();
+            int categoryID = 0;
             if (rs.next()) {
                 categoryID = rs.getInt("CategoryID");
             } else {
@@ -326,35 +267,15 @@ public class MaterialDAO {
             rs.close();
             stmt.close();
 
-            // 3. Cập nhật thông tin nhà cung cấp trong bảng suppliers
-            String updateSupplierSQL = "UPDATE suppliers SET SupplierName = ?, Address = ?, PhoneNum = ? WHERE SupplierID = ?";
-            stmt = conn.prepareStatement(updateSupplierSQL);
-            stmt.setString(1, supplierName);
-            stmt.setString(2, supplierAddress);
-            stmt.setString(3, supplierPhone);
-            stmt.setInt(4, supplierID);
-            stmt.executeUpdate();
-            stmt.close();
-
-            // 4. Cập nhật thông tin vật tư trong bảng materials
-            String updateMaterialSQL = "UPDATE materials SET MaterialName = ?, CategoryID = ?, SubcategoryID = ?, SupplierID = ?, Image = ?, Detail = ? WHERE MaterialID = ?";
+            // Cập nhật thông tin vật tư trong bảng materials
+            String updateMaterialSQL = "UPDATE materials SET MaterialName = ?, CategoryID = ?, SubcategoryID = ?, Image = ?, Detail = ? WHERE MaterialID = ?";
             stmt = conn.prepareStatement(updateMaterialSQL);
             stmt.setString(1, materialName);
             stmt.setInt(2, categoryID);
             stmt.setInt(3, subcategoryID);
-            stmt.setInt(4, supplierID);
-            stmt.setString(5, imageUrl);
-            stmt.setString(6, detail);
-            stmt.setInt(7, materialID);
-            stmt.executeUpdate();
-            stmt.close();
-
-            // 5. Cập nhật trạng thái vật tư trong bảng materialquantities
-            String updateQuantitySQL = "UPDATE materialquantities SET UsableQuantity = ?, BrokenQuantity = ? WHERE MaterialID = ?";
-            stmt = conn.prepareStatement(updateQuantitySQL);
-            stmt.setInt(1, usableQuantity);
-            stmt.setInt(2, brokenQuantity);
-            stmt.setInt(3, materialID);
+            stmt.setString(4, imageUrl);
+            stmt.setString(5, detail);
+            stmt.setInt(6, materialID);
             stmt.executeUpdate();
             stmt.close();
 
@@ -387,13 +308,11 @@ public class MaterialDAO {
         String sql = "SELECT m.MaterialID, m.MaterialName, m.Image, m.Detail, "
                 + "c.CategoryID, c.CategoryName, "
                 + "sc.SubcategoryID, sc.SubcategoryName, "
-                + "s.SupplierID, s.SupplierName, "
-                + "mq.UsableQuantity, mq.BrokenQuantity, mq.TotalQuantity "
+                + "u.MinUnit "
                 + "FROM materials m "
                 + "LEFT JOIN categories c ON m.CategoryID = c.CategoryID "
                 + "LEFT JOIN subcategories sc ON m.SubcategoryID = sc.SubcategoryID "
-                + "LEFT JOIN suppliers s ON m.SupplierID = s.SupplierID "
-                + "LEFT JOIN materialquantities mq ON m.MaterialID = mq.MaterialID "
+                + "LEFT JOIN units u ON m.MaterialID = u.MaterialID "
                 + "WHERE m.CategoryID = ?";
 
         try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -405,16 +324,9 @@ public class MaterialDAO {
                 material.setMaterialName(rs.getString("MaterialName"));
                 material.setCategory(new Category(rs.getInt("CategoryID"), rs.getString("CategoryName")));
                 material.setSubcategory(new SubCategory(rs.getInt("SubcategoryID"), rs.getInt("CategoryID"), rs.getString("SubcategoryName")));
-                material.setSupplierID(new Supplier(rs.getInt("SupplierID"), rs.getString("SupplierName"), null, null));
                 material.setImage(rs.getString("Image"));
                 material.setDetail(rs.getString("Detail"));
-
-                MaterialQuantity quantity = new MaterialQuantity(
-                        rs.getInt("MaterialID"),
-                        rs.getInt("UsableQuantity"),
-                        rs.getInt("BrokenQuantity"),
-                        rs.getInt("TotalQuantity"));
-                material.setQuantity(quantity);
+                material.setMinUnit(rs.getString("MinUnit"));
                 list.add(material);
             }
         } catch (SQLException e) {
@@ -703,13 +615,11 @@ public class MaterialDAO {
         String sql = "SELECT m.MaterialID, m.MaterialName, m.Image, m.Detail, "
                 + "c.CategoryID, c.CategoryName, "
                 + "sc.SubcategoryID, sc.SubcategoryName, "
-                + "s.SupplierID, s.SupplierName, "
-                + "mq.UsableQuantity, mq.BrokenQuantity, mq.TotalQuantity "
+                + "u.MinUnit "
                 + "FROM materials m "
                 + "LEFT JOIN categories c ON m.CategoryID = c.CategoryID "
                 + "LEFT JOIN subcategories sc ON m.SubcategoryID = sc.SubcategoryID "
-                + "LEFT JOIN suppliers s ON m.SupplierID = s.SupplierID "
-                + "LEFT JOIN materialquantities mq ON m.MaterialID = mq.MaterialID "
+                + "LEFT JOIN units u ON m.MaterialID = u.MaterialID "
                 + "WHERE m.MaterialID = ?";
 
         try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -722,17 +632,9 @@ public class MaterialDAO {
                 material.setMaterialName(rs.getString("MaterialName"));
                 material.setCategory(new Category(rs.getInt("CategoryID"), rs.getString("CategoryName")));
                 material.setSubcategory(new SubCategory(rs.getInt("SubcategoryID"), rs.getInt("CategoryID"), rs.getString("SubcategoryName")));
-                material.setSupplierID(new Supplier(rs.getInt("SupplierID"), rs.getString("SupplierName"), null, null));
                 material.setImage(rs.getString("Image"));
                 material.setDetail(rs.getString("Detail"));
-
-                MaterialQuantity quantity = new MaterialQuantity(
-                        rs.getInt("MaterialID"),
-                        rs.getInt("UsableQuantity"),
-                        rs.getInt("BrokenQuantity"),
-                        rs.getInt("TotalQuantity"));
-                material.setQuantity(quantity);
-                System.out.println("getMaterialById");
+                material.setMinUnit(rs.getString("MinUnit"));
                 return material;
             }
         } catch (SQLException e) {
@@ -781,19 +683,19 @@ public class MaterialDAO {
         return suppliers;
     }
 
-    // Phương thức tìm kiếm vật tư dựa trên từ khóa, danh mục và nhà cung cấp
-    public List<Material> searchMaterials(String keyword, String categoryId, String supplierId) {
+    /// Phương thức tìm kiếm vật tư dựa trên từ khóa, danh mục và danh mục con
+    public List<Material> searchMaterials(String keyword, String categoryId, String subcategoryId) {
         List<Material> list = new ArrayList<>();
         String sql = "SELECT m.MaterialID, m.MaterialName, m.Image, m.Detail, "
                 + "c.CategoryID, c.CategoryName, "
                 + "sc.SubcategoryID, sc.SubcategoryName, "
-                + "s.SupplierID, s.SupplierName, s.Address, s.PhoneNum, "
-                + "mq.UsableQuantity, mq.BrokenQuantity, mq.TotalQuantity "
+                + "mq.UsableQuantity, mq.BrokenQuantity, mq.TotalQuantity, "
+                + "u.MinUnit "
                 + "FROM materials m "
                 + "LEFT JOIN categories c ON m.CategoryID = c.CategoryID "
                 + "LEFT JOIN subcategories sc ON m.SubcategoryID = sc.SubcategoryID "
-                + "LEFT JOIN suppliers s ON m.SupplierID = s.SupplierID "
                 + "LEFT JOIN materialquantities mq ON m.MaterialID = mq.MaterialID "
+                + "LEFT JOIN units u ON m.MaterialID = u.MaterialID "
                 + "WHERE 1=1 ";
 
         if (keyword != null && !keyword.isEmpty()) {
@@ -802,8 +704,8 @@ public class MaterialDAO {
         if (categoryId != null && !categoryId.isEmpty()) {
             sql += "AND m.CategoryID = ? ";
         }
-        if (supplierId != null && !supplierId.isEmpty()) {
-            sql += "AND m.SupplierID = ? ";
+        if (subcategoryId != null && !subcategoryId.isEmpty()) {
+            sql += "AND m.SubcategoryID = ? ";
         }
 
         try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -814,8 +716,8 @@ public class MaterialDAO {
             if (categoryId != null && !categoryId.isEmpty()) {
                 stmt.setInt(paramIndex++, Integer.parseInt(categoryId));
             }
-            if (supplierId != null && !supplierId.isEmpty()) {
-                stmt.setInt(paramIndex++, Integer.parseInt(supplierId));
+            if (subcategoryId != null && !subcategoryId.isEmpty()) {
+                stmt.setInt(paramIndex++, Integer.parseInt(subcategoryId));
             }
 
             ResultSet rs = stmt.executeQuery();
@@ -825,9 +727,9 @@ public class MaterialDAO {
                 material.setMaterialName(rs.getString("MaterialName"));
                 material.setCategory(new Category(rs.getInt("CategoryID"), rs.getString("CategoryName")));
                 material.setSubcategory(new SubCategory(rs.getInt("SubcategoryID"), rs.getInt("CategoryID"), rs.getString("SubcategoryName")));
-                material.setSupplierID(new Supplier(rs.getInt("SupplierID"), rs.getString("SupplierName"), rs.getString("Address"), rs.getString("PhoneNum")));
                 material.setImage(rs.getString("Image"));
                 material.setDetail(rs.getString("Detail"));
+                material.setMinUnit(rs.getString("MinUnit"));
 
                 MaterialQuantity quantity = new MaterialQuantity(
                         rs.getInt("MaterialID"),
@@ -842,7 +744,8 @@ public class MaterialDAO {
         }
         return list;
     }
-   //edit by Bui Hieu
+    //edit by Bui Hieu
+
     public List<SearchMaterialDTO> searchMaterialsForPurchase(String term, String category, String subcategory) {
         List<SearchMaterialDTO> materials = new ArrayList<>();
         String sql = "SELECT m.MaterialID, m.MaterialName, s.SupplierName, u.MinUnit "
@@ -907,5 +810,125 @@ public class MaterialDAO {
             }
             return null;
         }
+    }
+//hieunt    
+    // Phương thức lấy tất cả vật tư cùng số lượng
+
+    public List<Material> getAllMaterialsWithQuantities() {
+        List<Material> list = new ArrayList<>();
+        String sql = """
+                     SELECT m.MaterialID,
+                         m.MaterialName,
+                         mq.UsableQuantity,
+                         mq.BrokenQuantity,
+                         mq.TotalQuantity
+                     FROM 
+                         materials m
+                         INNER JOIN materialquantities mq ON m.MaterialID = mq.MaterialID;""";
+
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Material material = new Material();
+
+                material.setMaterialID(rs.getInt("MaterialID"));
+                material.setMaterialName(rs.getString("MaterialName"));
+
+                MaterialQuantity quantity = new MaterialQuantity(
+                        rs.getInt("MaterialID"),
+                        rs.getInt("UsableQuantity"),
+                        rs.getInt("BrokenQuantity"),
+                        rs.getInt("TotalQuantity"));
+                material.setQuantity(quantity);
+                list.add(material);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+// Phương thức cập nhật số lượng vật tư
+
+    public void updateMaterialQuantities(int materialID, int usableQuantity, int brokenQuantity) throws SQLException {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+
+        try {
+            conn = DBUtil.getConnection();
+            conn.setAutoCommit(false);
+
+            String updateSQL = "UPDATE materialquantities SET UsableQuantity = ?, BrokenQuantity = ? WHERE MaterialID = ?";
+            stmt = conn.prepareStatement(updateSQL);
+            stmt.setInt(1, usableQuantity);
+            stmt.setInt(2, brokenQuantity);
+            stmt.setInt(3, materialID);
+
+            int rowsAffected = stmt.executeUpdate();
+
+            if (rowsAffected == 0) {
+                // Nếu không có bản ghi, thêm mới
+                String insertSQL = "INSERT INTO materialquantities (MaterialID, UsableQuantity, BrokenQuantity) VALUES (?, ?, ?)";
+                stmt = conn.prepareStatement(insertSQL);
+                stmt.setInt(1, materialID);
+                stmt.setInt(2, usableQuantity);
+                stmt.setInt(3, brokenQuantity);
+                stmt.executeUpdate();
+            }
+
+            conn.commit();
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            throw e;
+        } finally {
+            if (stmt != null) {
+                stmt.close();
+            }
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
+        }
+    }
+
+    // Phương thức tìm kiếm vật tư cho trang inventory
+    public List<Material> searchInventoryMaterials(String keyword) {
+        List<Material> list = new ArrayList<>();
+        String sql = """
+                     SELECT m.MaterialID,
+                         m.MaterialName,
+                         mq.UsableQuantity,
+                         mq.BrokenQuantity,
+                         mq.TotalQuantity
+                     FROM 
+                         materials m
+                         INNER JOIN materialquantities mq ON m.MaterialID = mq.MaterialID
+                     WHERE TRIM(LOWER(m.MaterialName)) LIKE ?""";
+
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, "%" + keyword.trim().toLowerCase() + "%");
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Material material = new Material();
+                material.setMaterialID(rs.getInt("MaterialID"));
+                material.setMaterialName(rs.getString("MaterialName"));
+
+                MaterialQuantity quantity = new MaterialQuantity(
+                        rs.getInt("MaterialID"),
+                        rs.getInt("UsableQuantity"),
+                        rs.getInt("BrokenQuantity"),
+                        rs.getInt("TotalQuantity"));
+                material.setQuantity(quantity);
+                list.add(material);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }

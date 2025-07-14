@@ -298,7 +298,7 @@
                     </div>
                     <button type="submit"><i class="fas fa-search"></i> Tìm kiếm</button>
                 </form>
-                
+
                 <div class="material-table">
                     <table id="requestTable">
                         <thead>
@@ -341,6 +341,7 @@
                                                                 '${fn:escapeXml(request.createdByName)}',
                                                                 '${fn:escapeXml(request.approvedByName != null ? request.approvedByName : 'Chưa có người duyệt')}',
                                                         ${request.status},
+                                                        ${request.requestId},
                                                         [<c:forEach var="material" items="${request.materials}" varStatus="status">{materialId:${material.materialId}, materialName:'${fn:escapeXml(material.materialName)}', quantity:${material.quantity}}${status.last ? '' : ','}</c:forEach>]
                                                                 )">Xem chi tiết</button>
                                                 </td>
@@ -424,6 +425,6 @@
         </div>
         <div id="editModalOverlay" class="modal-overlay"></div>
         <script src="${pageContext.request.contextPath}/js/script.js"></script>
-        
+
     </body>
 </html>
