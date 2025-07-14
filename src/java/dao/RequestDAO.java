@@ -829,4 +829,69 @@ public class RequestDAO {
     }
     return requests;
 }
+    
+    // Phương thức xóa yêu cầu
+    public void deleteRequest(int requestId, String requestType) throws SQLException {
+        String sqlDeleteMaterials = "";
+        String sqlDeleteRequest = "";
+        String idColumn = "";
+
+        switch (requestType.toLowerCase()) {
+            case "export":
+                sqlDeleteMaterials = "DELETE FROM exportrequestmaterials WHERE ExportRequestID = ?";
+                sqlDeleteRequest = "DELETE FROM exportrequests WHERE ExportRequestID = ?";
+                idColumn = "ExportRequestID";
+                break;
+            case "purchase":
+                sqlDeleteMaterials = "DELETE FROM purchaserequestmaterials WHERE PurchaseRequestID = ?";
+                sqlDeleteRequest = "DELETE FROM purchaserequests WHERE PurchaseRequestID = ?";
+                idColumn = "PurchaseRequestID";
+                break;
+            case "repair":
+                sqlDeleteMaterials = "DELETE FROM repairrequestmaterials WHERE RepairRequestID = ?";
+                sqlDeleteRequest = "DELETE FROM repairrequests WHERE RepairRequestID = ?";
+                idColumn = "RepairRequestID";
+                break;
+            case "return":
+                sqlDeleteMaterials = "DELETE FROM returnrequestmaterials WHERE ReturnRequestID = ?";
+                sqlDeleteRequest = "DELETE FROM returnrequests WHERE ReturnRequestID = ?";
+                idColumn = "ReturnRequestID";
+                break;
+            case "import":
+                sqlDeleteMaterials = "DELETE FROM importhistorymaterials WHERE ImportHistoryID = ?";
+                sqlDeleteRequest = "DELETE FROM importhistory WHERE ImportHistoryID = ?";
+                idColumn = "ImportHistoryID";
+                break;
+            default:
+                throw new SQLException("Loại yêu cầu không hợp lệ: " + requestType);
+        }
+
+        try (Connection conn = DBUtil.getConnection()) {
+            conn.setAutoCommit(false); // Bắt đầu transaction
+            try {
+                // Xóa bản ghi trong bảng trung gian (vật tư liên quan)
+                try (PreparedStatement stmtMaterials = conn.prepareStatement(sqlDeleteMaterials)) {
+                    stmtMaterials.setInt(1, requestId);
+                    stmtMaterials.executeUpdate();
+                }
+
+                // Xóa bản ghi trong bảng chính
+                try (PreparedStatement stmtRequest = conn.prepareStatement(sqlDeleteRequest)) {
+                    stmtRequest.setInt(1, requestId);
+                    int rowsAffected = stmtRequest.executeUpdate();
+                    if (rowsAffected == 0) {
+                        throw new SQLException("Không tìm thấy yêu cầu với " + idColumn + ": " + requestId);
+                    }
+                }
+
+                conn.commit(); // Commit transaction
+            } catch (SQLException e) {
+                conn.rollback(); // Rollback nếu có lỗi
+                throw e;
+            } finally {
+                conn.setAutoCommit(true); // Khôi phục chế độ auto-commit
+            }
+        }
+    }
 }
+

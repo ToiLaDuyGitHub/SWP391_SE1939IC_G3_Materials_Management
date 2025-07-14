@@ -122,7 +122,7 @@ public class ManageUserController extends HttpServlet {
                     userDAO.updateUserStatus(userId, isActive);
 
                     // Chuyển hướng về danh sách người dùng với bộ lọc hiện tại
-                    String redirectUrl = "Userctr?service=searchByKeywords";
+                    String redirectUrl = "manage-user?service=searchByKeywords";
                     if (keywords != null && !keywords.isEmpty()) {
                         redirectUrl += "&keywords=" + URLEncoder.encode(keywords, "UTF-8");
                     }
@@ -141,7 +141,7 @@ public class ManageUserController extends HttpServlet {
             } else {
                 req.setAttribute("error", "Thiếu tham số");
             }
-            String redirectUrl = req.getContextPath() + "/Userctr?service=" + (service.equals("searchByKeywords") ? "searchByKeywords" : "listAllUser");
+            String redirectUrl = req.getContextPath() + "/manage-user?service=" + (service.equals("searchByKeywords") ? "searchByKeywords" : "listAllUser");
             if (keywords != null && !keywords.isEmpty()) {
                 redirectUrl += "&keywords=" + URLEncoder.encode(keywords, "UTF-8");
             }

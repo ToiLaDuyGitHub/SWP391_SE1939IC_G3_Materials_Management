@@ -165,7 +165,7 @@ PM Author : ADMIN
                     <c:if test="${fn:contains(feature.url, '/manage-material')|| 
                                   fn:contains(feature.url, '/add-material')|| 
                                   fn:contains(feature.url, '/edit-material')|| 
-                                  fn:contains(feature.url, '/list-units')}">
+                                  fn:contains(feature.url, '/list-units') || fn:contains(feature.url, '/inventory')}">
                         <c:set var="hasMaterial" value="true" />
                     </c:if>
                 </c:forEach>
@@ -189,6 +189,11 @@ PM Author : ADMIN
                             <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
                                 <c:if test="${feature.url == '/add-material'}">
                                     <a href="${pageContext.request.contextPath}/add-material" >Thêm mới vật tư</a>
+                                </c:if>
+                            </c:forEach>
+                            <c:forEach var="feature" items="${sessionScope.permittedFeatures}">
+                                <c:if test="${feature.url == '/inventory'}">
+                                    <a href="${pageContext.request.contextPath}/inventory">Tồn kho</a>
                                 </c:if>
                             </c:forEach>
 
@@ -299,5 +304,8 @@ PM Author : ADMIN
             </ul>
         </div>
         <script src="<%= request.getContextPath() %>/js/script.js"></script>
+        <script>
+                            const contextPath = "<%= request.getContextPath() %>";
+        </script>
     </body>
 </html>

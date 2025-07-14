@@ -2,11 +2,10 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
+
 package controller;
 
-import dao.CategoryDAO;
 import dao.MaterialDAO;
-import dao.SubCategoryDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -16,41 +15,39 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import model.Material;
-import model.SubCategory;
 
 /**
  *
  * @author Admin
  */
-@WebServlet(name = "SearchMaterialController", urlPatterns = {"/search-material"})
-public class SearchMaterialController extends HttpServlet {
-    
-    private MaterialDAO materialDAO = new MaterialDAO();
-    private CategoryDAO categoryDAO = new CategoryDAO();
-    private SubCategoryDAO subCategoryDAO = new SubCategoryDAO();
+@WebServlet(name="SearchInventoryController", urlPatterns={"/search-inventory"})
+public class SearchInventoryController extends HttpServlet {
+   
+    private MaterialDAO materialDAO;
+
+    @Override
+    public void init() throws ServletException {
+        materialDAO = new MaterialDAO();
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    throws ServletException, IOException {
         String keyword = request.getParameter("keyword") != null ? request.getParameter("keyword").trim() : "";
-        String categoryId = request.getParameter("categoryId");
-        String subcategoryId = request.getParameter("subcategoryId");
         
-        List<Material> materials = materialDAO.searchMaterials(keyword, categoryId, subcategoryId);
-        request.setAttribute("materials", materials);
+        List<Material> materialList;
+        if (keyword.isEmpty()) {
+            materialList = materialDAO.getAllMaterialsWithQuantities();
+        } else {
+            materialList = materialDAO.searchInventoryMaterials(keyword);
+        }
+        
+        request.setAttribute("materialList", materialList);
+        request.getRequestDispatcher("/inventory.jsp").forward(request, response);
+    } 
 
-        // Sử dụng CategoryDAO để lấy danh sách danh mục
-        request.setAttribute("categories", categoryDAO.getAllCategories());
-        // Sử dụng SubCategoryDAO để lấy danh sách danh mục con
-        request.setAttribute("subcategories", subCategoryDAO.getAllSubcategories());
-        
-        request.getRequestDispatcher("/materialList.jsp").forward(request, response);
-        
-    }
-
-    /**
+    /** 
      * Handles the HTTP <code>POST</code> method.
-     *
      * @param request servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
@@ -58,13 +55,12 @@ public class SearchMaterialController extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        doGet(request, response);
+    throws ServletException, IOException {
+        
     }
 
-    /**
+    /** 
      * Returns a short description of the servlet.
-     *
      * @return a String containing servlet description
      */
     @Override

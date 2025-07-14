@@ -75,7 +75,7 @@
             .search-container select {
                 padding: 12px 15px;
                 border: 2px solid #e0e0e0;
-        border-radius: 25px;
+                border-radius: 25px;
                 font-size: 14px;
                 font-family: 'Poppins', sans-serif;
                 outline: none;
@@ -260,11 +260,11 @@
                                     </option>
                                 </c:forEach>
                             </select>
-                            <select name="supplierId">
-                                <option value="">Tất cả nhà cung cấp</option>
-                                <c:forEach var="supplier" items="${suppliers}">
-                                    <option value="${supplier.supplierID}" ${param.supplierId == supplier.supplierID ? 'selected' : ''}>
-                                        ${supplier.supplierName}
+                            <select name="subcategoryId">
+                                <option value="">Tất cả danh mục con</option>
+                                <c:forEach var="subcategory" items="${subcategories}">
+                                    <option value="${subcategory.subcategoryID}" ${param.subcategoryId == subcategory.subcategoryID ? 'selected' : ''}>
+                                        ${subcategory.subcategoryName}
                                     </option>
                                 </c:forEach>
                             </select>
@@ -272,7 +272,7 @@
                             <a href="${pageContext.request.contextPath}/add-material" class="add-button"><i class="fas fa-plus"></i> Thêm mới</a>
                         </form>
                     </div>
-                                
+
                     <c:if test="${not empty sessionScope.successMessage}">
                         <div class="success-message">
                             <i class="fas fa-check-circle"></i> ${sessionScope.successMessage}
@@ -292,16 +292,15 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Tên vật tư</th>
+                                <th>Đơn vị</th>
                                 <th>Danh mục</th>
-                                <th>Tên nhà cung cấp</th>
-                                <th>Số lượng</th>
                                 <th>Hình ảnh</th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             <c:set var="page" value="${param.page != null ? param.page : 1}" />
-                            <c:set var="itemsPerPage" value="6" />
+                            <c:set var="itemsPerPage" value="10" />
                             <c:set var="start" value="${(page - 1) * itemsPerPage}" />
                             <c:set var="end" value="${start + itemsPerPage - 1}" />
                             <c:set var="totalItems" value="${materials.size()}" />
@@ -311,9 +310,8 @@
                                 <tr>
                                     <td>${material.materialID}</td>
                                     <td>${material.materialName}</td>
+                                    <td>${material.minUnit}</td>
                                     <td>${material.category.categoryName}</td>
-                                    <td>${material.supplierID.supplierName}</td>
-                                    <td>${material.quantity.totalQuantity}</td>
                                     <td>
                                         <c:if test="${not empty material.image}">
                                             <img src="${material.image}" alt="${material.materialName}" class="product-image">
@@ -324,33 +322,24 @@
                                     </td>
                                     <td>
                                         <button class="edit-button" onclick="showMaterialDetail(
-                                                    ${material.materialID},
-                                                        '${material.materialName}',
-                                                        '${material.category.categoryName}',
+                                                ${material.materialID},
+                                    '${material.materialName}',
+                                    '${material.category.categoryName}',
                                                 ${material.subcategory.subcategoryID},
-                                                        '${material.supplierID.supplierName}',
-                                                        '${material.supplierID.address}',
-                                                        '${material.supplierID.phoneNum}',
-                                                ${material.quantity.totalQuantity},
-                                                ${material.quantity.usableQuantity},
-                                                ${material.quantity.brokenQuantity},
-                                                        '${material.image}',
-                                                        '${material.detail}')">Chi tiết</button>
-                                       
-                                         <button class="delete-button" onclick="confirmDelete(${material.materialID})"><i class="fas fa-trash"></i></button>
+                                    '${material.image}',
+                                    '${material.detail}')">Chi tiết</button>
+                                        <button class="delete-button" onclick="confirmDelete(${material.materialID})"><i class="fas fa-trash"></i></button>
                                     </td>
                                 </tr>
                             </c:forEach>
                         </tbody>
                     </table>
-
                     <!-- Pagination Controls -->
                     <div class="pagination">
-                      
                         <c:forEach var="i" begin="1" end="${totalPages}">
-                           <a href="${pageContext.request.contextPath}/search-material?keyword=${param.keyword}&categoryId=${param.categoryId}&supplierId=${param.supplierId}&page=${i}" class="${i == page ? 'active' : ''}">${i}</a>
-                        </c:forEach>
-
+        <a href="${pageContext.request.contextPath}/manage-material?keyword=${param.keyword}&categoryId=${param.categoryId}&subcategoryId=${param.subcategoryId}&page=${i}" 
+           class="${i == page ? 'active' : ''}">${i}</a>
+    </c:forEach>
                     </div>
                 </div>
 
@@ -378,30 +367,6 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="supplier">Nhà cung cấp:</label>
-                            <input type="text" id="supplier" name="supplier" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="supplierAddress">Địa chỉ nhà cung cấp:</label>
-                            <input type="text" id="supplierAddress" name="supplierAddress">
-                        </div>
-                        <div class="form-group">
-                            <label for="supplierPhone">Số điện thoại nhà cung cấp:</label>
-                            <input type="text" id="supplierPhone" name="supplierPhone">
-                        </div>
-                        <div class="form-group">
-                            <label for="quantity">Số lượng tổng:</label>
-                            <input type="number" id="quantity" name="quantity" min="0" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="usableQuantity">Số lượng sử dụng được:</label>
-                            <input type="number" id="usableQuantity" name="statusOld" min="0" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="brokenQuantity">Số lượng hỏng:</label>
-                            <input type="number" id="brokenQuantity" name="statusDamaged" min="0" required>
-                        </div>
-                        <div class="form-group">
                             <label for="detail">Chi tiết:</label>
                             <input type="text" id="detail" name="detail">
                         </div>
@@ -416,13 +381,12 @@
                             <button type="button" class="cancel-btn" onclick="closeEditModal()"><i class="fas fa-times"></i> Hủy</button>
                         </div>
                     </form>
-                        
                 </div>
             </div>
         </div>
         <script src="<%= request.getContextPath() %>/js/script.js"></script>
         <script>
-            const contextPath = "<%= request.getContextPath() %>";
+                                const contextPath = "<%= request.getContextPath() %>";
         </script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {

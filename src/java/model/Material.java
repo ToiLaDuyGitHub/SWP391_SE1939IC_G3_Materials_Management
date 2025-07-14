@@ -18,11 +18,12 @@ public class Material {
     private String image;
     private MaterialQuantity quantity;
     private String detail;
+    private String minUnit;
 
     public Material() {
     }
 
-    public Material(int materialID, String materialName, Category category, SubCategory subcategory, Supplier supplierID, String image, MaterialQuantity quantity, String detail) {
+    public Material(int materialID, String materialName, Category category, SubCategory subcategory, Supplier supplierID, String image, MaterialQuantity quantity, String detail, String minUnit) {
         this.materialID = materialID;
         this.materialName = materialName;
         this.category = category;
@@ -31,6 +32,7 @@ public class Material {
         this.image = image;
         this.quantity = quantity;
         this.detail = detail;
+        this.minUnit = minUnit;
     }
 
     public int getMaterialID() {
@@ -97,5 +99,12 @@ public class Material {
         this.detail = detail;
     }
 
-    
+    public String getMinUnit() {
+        return minUnit;
+    }
+
+    public void setMinUnit(String minUnit) {
+        this.minUnit = minUnit;
+    }
+
 }

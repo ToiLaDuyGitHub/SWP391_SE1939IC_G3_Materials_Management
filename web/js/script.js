@@ -211,17 +211,11 @@ function showPermissions() {
     closeSidebarOnMobile();
 }
 
-function showMaterialDetail(materialID, name, category, subcategory, supplier, supplierAddress, supplierPhone, totalQuantity, usableQuantity, brokenQuantity, image, detail) {
+function showMaterialDetail(materialID, name, category, subcategory, image, detail) {
     document.getElementById('materialID').value = materialID;
     document.getElementById('materialName').value = name;
     document.getElementById('category').value = category;
     document.getElementById('subcategory').value = subcategory;
-    document.getElementById('supplier').value = supplier;
-    document.getElementById('supplierAddress').value = supplierAddress;
-    document.getElementById('supplierPhone').value = supplierPhone;
-    document.getElementById('quantity').value = totalQuantity;
-    document.getElementById('usableQuantity').value = usableQuantity;
-    document.getElementById('brokenQuantity').value = brokenQuantity;
     document.getElementById('detail').value = detail;
 
     const materialImage = document.getElementById('materialImage');
@@ -350,20 +344,29 @@ function showRequestDetail(requestCode, requestType, createdDate, createdByName,
         console.error("Lỗi khi hiển thị chi tiết yêu cầu: ", error);
     }
 }
-function showRequestStaff(requestCode, requestType, createdDate, createdByName, approvedByName, status, materials) {
+function showRequestStaff(requestCode, requestType, createdDate, createdByName, approvedByName, status, requestId, materials) {
     try {
         // Hiển thị thông tin yêu cầu trong modal
         document.getElementById('requestCode').value = requestCode;
         document.getElementById('requestType').value = requestType;
         document.getElementById('createdDate').value = createdDate;
-        document.getElementById('statusText').value = status === 1 ? 'Đã duyệt' : 'Chưa duyệt';
+        document.getElementById('statusText').value = status === 1 ? 'Đã duyệt' : status === 2 ? 'Từ chối' : 'Chưa duyệt';
         document.getElementById('approvedByName').value = approvedByName || 'Chưa có người duyệt';
 
-        // Ẩn các nút "Duyệt" và "Từ chối" vì đây là giao diện cho nhân viên
-        const approveForm = document.getElementById('approveForm');
-        const rejectForm = document.getElementById('rejectForm');
-        if (approveForm) approveForm.style.display = 'none';
-        if (rejectForm) rejectForm.style.display = 'none';
+        // Gán requestId và requestType vào form
+        document.getElementById('deleteRequestId').value = requestId;
+        document.getElementById('deleteRequestType').value = requestType;
+
+        // Hiển thị hoặc ẩn các nút "Sửa" và "Xóa" dựa trên trạng thái
+        const editForm = document.getElementById('editForm');
+        const deleteForm = document.getElementById('deleteForm');
+        if (status === 0) {
+            editForm.style.display = 'inline-block';
+            deleteForm.style.display = 'inline-block';
+        } else {
+            editForm.style.display = 'none';
+            deleteForm.style.display = 'none';
+        }
 
         // Hiển thị danh sách vật tư
         const materialTableBody = document.getElementById('materialTableBody');
@@ -391,4 +394,12 @@ function showRequestStaff(requestCode, requestType, createdDate, createdByName, 
     } catch (error) {
         console.error("Lỗi khi hiển thị chi tiết yêu cầu cho nhân viên: ", error);
     }
+}
+function showInventoryDetail(materialID, materialName, totalQuantity, usableQuantity, brokenQuantity) {
+    document.getElementById('materialID').value = materialID;
+    document.getElementById('materialName').value = materialName;
+    document.getElementById('totalQuantity').value = totalQuantity;
+    document.getElementById('usableQuantity').value = usableQuantity;
+    document.getElementById('brokenQuantity').value = brokenQuantity;
+    openEditModal();
 }

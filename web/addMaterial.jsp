@@ -11,7 +11,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Hệ thống Quản lý Xây dựng - Trang chủ</title>
+        <title>Hệ thống Quản lý Xây dựng - Thêm vật tư</title>
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
         <link rel="stylesheet" href="<%= request.getContextPath() %>/css/styles.css">
@@ -20,7 +20,6 @@
                 max-width: 1200px;
                 margin: 20px auto; 
             }
-            /* Thêm style cho thông báo */
             .success-message {
                 background-color: #4caf50;
                 color: #fff;
@@ -57,13 +56,23 @@
                 transform: scale(1.01);
                 outline: none;
             }
+            .invalid-input {
+                border-color: #f44336 !important;
+                box-shadow: 0 0 8px rgba(244, 67, 54, 0.3) !important;
+            }
+            .error-text {
+                color: #f44336;
+                font-size: 12px;
+                margin-top: 4px;
+                display: none;
+            }
         </style>
     </head>
     <body>
         <div id="dashboard">
             <%@ include file="sidebar.jsp" %>
             <div class="content" id="contentArea">
-                <!-- Add Material Section -->
+                <!-- Phần Thêm Vật tư -->
                 <div class="content-card" id="addMaterialSection">
                     <h2><i class="fas fa-box-open"></i> Thêm mới vật tư</h2>
                     <!-- Thông báo cho thêm vật tư -->
@@ -84,18 +93,7 @@
                                 <div class="form-group">
                                     <label for="materialName"><i class="fas fa-tag"></i> Tên vật tư:</label>
                                     <input type="text" id="materialName" name="MaterialName" placeholder="Nhập tên vật tư" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="supplierName"><i class="fas fa-building"></i> Tên nhà cung cấp:</label>
-                                    <input type="text" id="supplierName" name="SupplierName" placeholder="Nhập tên nhà cung cấp" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="supplierAddress"><i class="fas fa-map-marker-alt"></i> Địa chỉ nhà cung cấp:</label>
-                                    <input type="text" id="supplierAddress" name="Address" placeholder="Nhập địa chỉ nhà cung cấp" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="supplierPhone"><i class="fas fa-phone"></i> Số điện thoại nhà cung cấp:</label>
-                                    <input type="text" id="supplierPhone" name="PhoneNum" placeholder="Nhập số điện thoại nhà cung cấp" required>
+                                    <div id="materialNameError" class="error-text"></div>
                                 </div>
                                 <div class="form-group">
                                     <label for="image"><i class="fas fa-image"></i> Hình ảnh:</label>
@@ -114,10 +112,6 @@
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label for="usableQuantity"><i class="fas fa-box"></i> Số lượng :</label>
-                                    <input type="number" id="usableQuantity" name="UsableQuantity" required placeholder="Nhập số lượng " min="0">
-                                </div>
-                                <div class="form-group">
                                     <label for="unit"><i class="fas fa-ruler"></i> Đơn vị:</label>
                                     <select id="unit" name="UnitID" required>
                                         <option value="" disabled selected>Chọn đơn vị</option>
@@ -130,7 +124,6 @@
                                     <label for="detail"><i class="fas fa-info-circle"></i> Chi tiết vật tư:</label>
                                     <textarea id="detail" name="Detail" placeholder="Nhập chi tiết vật tư"></textarea>
                                 </div>
-                                
                             </div>
                         </div>
                         <div class="form-group form-actions">
@@ -142,12 +135,44 @@
         </div>
         <script src="<%= request.getContextPath() %>/js/script.js"></script>
         <script>
-            // Tự động hiển thị 
             document.addEventListener('DOMContentLoaded', function () {
                 const profileSection = document.getElementById('addMaterialSection');
                 if (profileSection) {
                     profileSection.classList.remove('hidden');
                 }
+
+                const materialNameInput = document.getElementById('materialName');
+                const materialNameError = document.getElementById('materialNameError');
+                const form = document.getElementById('addMaterialForm');
+
+                function validateMaterialName() {
+                    const value = materialNameInput.value;
+                    const regex = /^[a-zA-Z0-9\s\u00C0-\u1EF9]*$/; // Cho phép chữ cái, số, khoảng trắng và ký tự tiếng Việt
+                    const isValidLength = value.length >= 2 && value.length <= 250;
+                    const hasNoSpecialChars = regex.test(value);
+
+                    if (!isValidLength) {
+                        materialNameInput.classList.add('invalid-input');
+                        materialNameError.textContent = 'Tên vật tư phải có 2-250 ký tự.';
+                        materialNameError.style.display = 'block';
+                        return false;
+                    } else if (!hasNoSpecialChars) {
+                        materialNameInput.classList.add('invalid-input');
+                        materialNameError.textContent = 'Tên vật tư chứa ký tự đặc biệt.';
+                        materialNameError.style.display = 'block';
+                        return false;
+                    } else {
+                        materialNameInput.classList.remove('invalid-input');
+                        materialNameError.style.display = 'none';
+                        return true;
+                    }
+                }
+
+                form.addEventListener('submit', function (event) {
+                    if (!validateMaterialName()) {
+                        event.preventDefault();
+                    }
+                });
             });
         </script>
     </body>
